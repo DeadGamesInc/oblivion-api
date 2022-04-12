@@ -31,7 +31,7 @@ namespace OblivionAPI.Controllers {
         [Route("getTotalListings")]
         public async Task<ActionResult<uint>> GetTotalListings() {
             _logger.LogInformation("getTotalListings for Chain ID {ChainID}", _chainID);
-            var listings = await _database.GetTotalListings(_chainID);
+            var listings = await _database.TotalListings(_chainID);
             return Ok(listings);
         }
         
@@ -137,7 +137,7 @@ namespace OblivionAPI.Controllers {
         [Route("getTotalOffers/{id}")]
         public async Task<ActionResult<uint>> GetTotalOffers(uint id) {
             _logger.LogInformation("getTotalOffers for listing {ID} on {ChainID}", id, _chainID);
-            var offers = await _database.GetTotalOffers(_chainID, id);
+            var offers = await _database.TotalOffers(_chainID, id);
             return Ok(offers);
         }
         
@@ -182,7 +182,7 @@ namespace OblivionAPI.Controllers {
         [Route("getNft/{address}")]
         public async Task<ActionResult<NFTDetails>> GetNFT(string address) {
             _logger.LogInformation("getNft for {Address} on {ChainID}", address, _chainID);
-            var nft = await _database.GetNFT(_chainID, address);
+            var nft = await _database.NFTDetails(_chainID, address);
             if (nft == null) return NotFound(null);
             return Ok(nft);
         }
@@ -191,7 +191,7 @@ namespace OblivionAPI.Controllers {
         [Route("getNftTokenURI/{address}/{tokenID}")]
         public async Task<ActionResult<NFTTokenIDInfo>> GetNFTTokenURI(string address, uint tokenID) {
             _logger.LogInformation("getNftTokenURI for {Address}:{TokenID} on {ChainID}", address, tokenID, _chainID);
-            var tokenURI = await _database.GetNFTTokenURI(_chainID, address, tokenID);
+            var tokenURI = await _database.NFTTokenURI(_chainID, address, tokenID);
             if (tokenURI == null) return NotFound(null);
             return Ok(tokenURI);
         }
@@ -203,7 +203,7 @@ namespace OblivionAPI.Controllers {
             var tokenURIs = new List<NFTTokenIDInfo>();
 
             foreach (var id in tokenIDs) {
-                var tokenURI = await _database.GetNFTTokenURI(_chainID, address, id);
+                var tokenURI = await _database.NFTTokenURI(_chainID, address, id);
                 if (tokenURI != null) tokenURIs.Add(tokenURI);
             }
             
@@ -214,7 +214,7 @@ namespace OblivionAPI.Controllers {
         [Route("getTotalCollections")]
         public async Task<ActionResult<uint>> GetTotalCollections() {
             _logger.LogInformation("getTotalCollections on {ChainID}", _chainID);
-            var collections = await _database.GetTotalCollections(_chainID);
+            var collections = await _database.TotalCollections(_chainID);
             return collections;
         }
 
@@ -231,7 +231,7 @@ namespace OblivionAPI.Controllers {
         [Route("getCollection/{id}")]
         public async Task<ActionResult<CollectionDetails>> GetCollection(uint id) {
             _logger.LogInformation("getCollection {ID} on {ChainID}", id, _chainID);
-            var collection = await _database.GetCollection(_chainID, id);
+            var collection = await _database.CollectionDetails(_chainID, id);
             if (collection == null) return NotFound(null);
             return Ok(collection);
         }
@@ -240,7 +240,7 @@ namespace OblivionAPI.Controllers {
         [Route("getTotalReleases")]
         public async Task<ActionResult<uint>> GetTotalReleases() {
             _logger.LogInformation("getTotalReleases on {ChainID}", _chainID);
-            var releases = await _database.GetTotalReleases(_chainID);
+            var releases = await _database.TotalReleases(_chainID);
             return releases;
         }
 
@@ -257,7 +257,7 @@ namespace OblivionAPI.Controllers {
         [Route("getRelease/{id}")]
         public async Task<ActionResult<ReleaseDetails>> GetRelease(uint id) {
             _logger.LogInformation("getRelease {ID} on {ChainID}", id, _chainID);
-            var release = await _database.GetRelease(_chainID, id);
+            var release = await _database.ReleaseDetails(_chainID, id);
             if (release == null) return NotFound(null);
             return Ok(release);
         }
