@@ -107,6 +107,22 @@ namespace OblivionAPI.Services {
         public async Task<ReleaseDetails> ReleaseDetails(ChainID chainID, uint id) {
             return await RetrieveRelease(chainID, id, false);
         }
+        
+        public async Task<ListingDetails> RefreshListing(ChainID chainID, uint id) {
+            return await RetrieveListing(chainID, id, true);
+        }
+
+        public async Task<OfferDetails> RefreshOffer(ChainID chainID, uint id, string paymentToken, uint offerID) {
+            return await RetrieveOffer(chainID, id, paymentToken, offerID, true);
+        }
+
+        public async Task<CollectionDetails> RefreshCollection(ChainID chainID, uint id) {
+            return await RetrieveCollection(chainID, id, true);
+        }
+
+        public async Task<ReleaseDetails> RefreshRelease(ChainID chainID, uint id) {
+            return await RetrieveRelease(chainID, id, true);
+        }
 
         public async Task HandleUpdate() {
             var details = _details.ToList();

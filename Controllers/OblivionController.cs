@@ -270,5 +270,41 @@ namespace OblivionAPI.Controllers {
             if (tokens == null) return NotFound(null);
             return Ok(tokens.ToArray());
         }
+
+        [HttpGet]
+        [Route("refreshListing/{id}")]
+        public async Task<ActionResult<ListingDetails>> RefreshListing(uint id) {
+            _logger.LogInformation("refreshListing for {ID} on {ChainID}", id, _chainID);
+            var listing = await _database.RefreshListing(_chainID, id);
+            if (listing == null) return NotFound(null);
+            return Ok(listing);
+        }
+
+        [HttpGet]
+        [Route("refreshOffer/{listingId}/{paymentToken}/{id}")]
+        public async Task<ActionResult<OfferDetails>> RefreshOffer(uint listingId, string paymentToken, uint id) {
+            _logger.LogInformation("refreshOffer {ListingID}:{PaymentToken}:{OfferID} on {ChainID}", listingId, paymentToken, id, _chainID);
+            var offer = await _database.RefreshOffer(_chainID, listingId, paymentToken, id);
+            if (offer == null) return NotFound(null);
+            return Ok(offer);
+        }
+
+        [HttpGet]
+        [Route("refreshCollection/{id}")]
+        public async Task<ActionResult<CollectionDetails>> RefreshCollection(uint id) {
+            _logger.LogInformation("refreshCollection {ID} on {ChainID}", id, _chainID);
+            var collection = await _database.RefreshCollection(_chainID, id);
+            if (collection == null) return NotFound(null);
+            return Ok(collection);
+        }
+
+        [HttpGet]
+        [Route("refreshRelease/{id}")]
+        public async Task<ActionResult<ReleaseDetails>> RefreshRelease(uint id) {
+            _logger.LogInformation("refreshRelease {ID} on {ChainId}", id, _chainID);
+            var release = await _database.RefreshRelease(_chainID, id);
+            if (release == null) return NotFound(null);
+            return Ok(release);
+        }
     }
 }
