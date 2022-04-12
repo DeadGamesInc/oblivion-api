@@ -19,7 +19,7 @@ namespace OblivionAPI.Objects {
         public uint Sales { get; set; }
         public uint MaxSales { get; set; }
         public uint MaxQuantity { get; set; }
-        public string EndDate { get; set; }
+        public uint EndDate { get; set; }
         public uint Discount { get; set; }
         public bool Selectable { get; set; }
         public bool Whitelisted { get; set; }
@@ -37,7 +37,7 @@ namespace OblivionAPI.Objects {
             Sales = response.Sales;
             MaxSales = response.MaxSales;
             MaxQuantity = response.MaxQuantity;
-            EndDate = response.EndDate.ToString();
+            EndDate = response.EndDate;
             Discount = response.Discount;
             Selectable = response.Selectable;
             Whitelisted = response.Whitelisted;
