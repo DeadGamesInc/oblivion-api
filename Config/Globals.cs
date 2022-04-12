@@ -6,6 +6,7 @@
  */
 
 using OblivionAPI.Objects;
+using System;
 using System.Collections.Generic;
 
 namespace OblivionAPI.Config {
@@ -15,8 +16,14 @@ namespace OblivionAPI.Config {
         public static uint REFRESH_TIME = 300000;
         public static int THROTTLE_WAIT = 500;
 
+        public static int REDUCED_IMAGE_WIDTH = 100;
+        public static int REDUCED_IMAGE_HEIGHT = 100;
+
         public const string IPFS_RAW_PREFIX = "ipfs://";
         public const string IPFS_HTTP_PREFIX = "https://ipfs.io/ipfs/";
+
+        public static string BASE_DIR = AppDomain.CurrentDomain.BaseDirectory;
+        public static string TEMP_DIR = BASE_DIR + @"temp\";
         
         public static readonly List<BlockchainDetails> Blockchains = new() {
             new() { ChainID = ChainID.BSC_Mainnet, Node = "https://bsc-dataseed.binance.org" },

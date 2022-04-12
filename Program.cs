@@ -11,6 +11,7 @@ using OblivionAPI.Config;
 using Serilog;
 using Serilog.Events;
 using System;
+using System.IO;
 
 namespace OblivionAPI {
     public static class Program {
@@ -31,6 +32,8 @@ namespace OblivionAPI {
             
             if (Environment.GetEnvironmentVariable("THROTTLE_WAIT") != null) 
                 Globals.THROTTLE_WAIT = Convert.ToInt32(Environment.GetEnvironmentVariable("THROTTLE_WAIT"));
+
+            if (!Directory.Exists(Globals.TEMP_DIR)) Directory.CreateDirectory(Globals.TEMP_DIR);
 
             var host = CreateHost();
 

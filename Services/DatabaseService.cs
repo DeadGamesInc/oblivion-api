@@ -18,13 +18,16 @@ namespace OblivionAPI.Services {
         private readonly ILogger<DatabaseService> _logger;
         private readonly BlockchainService _blockchain;
         private readonly LookupService _lookup;
+        private readonly ImageCacheService _imageCache;
 
         private readonly List<OblivionDetails> _details;
 
-        public DatabaseService(ILogger<DatabaseService> logger, BlockchainService blockchain, LookupService lookup) {
+        public DatabaseService(ILogger<DatabaseService> logger, BlockchainService blockchain, LookupService lookup, ImageCacheService imageCache) {
             _logger = logger;
             _blockchain = blockchain;
             _lookup = lookup;
+            _imageCache = imageCache;
+            
             _details = new List<OblivionDetails> {
                 new() { ChainID = ChainID.BSC_Mainnet },
                 new() { ChainID = ChainID.BSC_Testnet }
@@ -272,9 +275,13 @@ namespace OblivionAPI.Services {
 
             if (nft is { Metadata: null }) {
                 var metadata = await _lookup.GetNFTMetadata(nft.URI);
-                if (metadata != null) nft.Metadata = new NFTMetadata(metadata);
+                if (metadata != null) {
+                    nft.Metadata = new NFTMetadata(metadata);
+                    await _imageCache.ImageCache(chainID, address, nft.Metadata.Image);
+                }
             }
-            
+
+
             return nft;
         }
         

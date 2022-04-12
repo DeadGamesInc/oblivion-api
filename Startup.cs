@@ -20,6 +20,7 @@ namespace OblivionAPI {
                         .AllowAnyMethod()
                         .AllowAnyHeader();
                 }));
+            services.AddSingleton<ImageCacheService>();
             services.AddSingleton<LookupService>();
             services.AddSingleton<BlockchainService>();
             services.AddSingleton<DatabaseService>();
