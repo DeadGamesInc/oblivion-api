@@ -15,7 +15,7 @@ namespace OblivionAPI.Objects {
         public string Treasury { get; set; }
         public uint Royalties { get; set; }
         public uint CreateBlock { get; set; }
-        public string[] NFTs { get; set; }
+        public string[] Nfts { get; set; }
         public DateTime LastRetrieved;
 
         public CollectionDetails(uint id, CollectionResponse response, string[] nfts) {
@@ -24,14 +24,14 @@ namespace OblivionAPI.Objects {
             Treasury = response.Treasury;
             Royalties = response.Royalties;
             CreateBlock = response.CreateBlock;
-            NFTs = nfts;
+            Nfts = nfts;
             LastRetrieved = DateTime.Now;
         }
 
         public void Update(CollectionDetails details) {
             Treasury = details.Treasury;
             Royalties = details.Royalties;
-            NFTs = details.NFTs;
+            Nfts = details.Nfts;
             LastRetrieved = DateTime.Now;
         }
     }
