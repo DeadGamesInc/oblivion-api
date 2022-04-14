@@ -21,6 +21,8 @@ namespace OblivionAPI.Services {
         }
 
         public async Task<ImageCacheDetails> ImageCache(ChainID chainID, string nft, string uri) {
+            var details = new ImageCacheDetails();
+            
             try {
                 _logger.LogInformation("Performing image caching for {NFT} on {ChainID}", nft, chainID);
                 uri = uri.Replace(Globals.IPFS_RAW_PREFIX, Globals.IPFS_HTTP_PREFIX);
@@ -32,7 +34,7 @@ namespace OblivionAPI.Services {
                 var lowResFile = Globals.TEMP_DIR + nft + "_low";
 
                 var content = await response.Content.ReadAsStreamAsync();
-                
+
                 await using (var highRes = File.Create(highResFile)) 
                     await content.CopyToAsync(highRes);
                 
@@ -48,20 +50,10 @@ namespace OblivionAPI.Services {
                     
                 bitmap.Save(lowResFile);
                 
-                return new ImageCacheDetails();
+                return details;
             } catch (Exception error) {
                 _logger.LogError(error, "An exception occured performing image caching for {NFT} on {ChainID}", nft, chainID);
-                return null;
-            }
-        }
-        
-        private Image ReduceImage(Stream stream) {
-            try {
-                var image = Image.FromStream(stream);
-                return image.GetThumbnailImage(Globals.REDUCED_IMAGE_WIDTH, Globals.REDUCED_IMAGE_HEIGHT, () => false, IntPtr.Zero);
-            } catch (Exception error) {
-                _logger.LogError(error, "An exception occured while reducing image");
-                return null;
+                return details;
             }
         }
     }
