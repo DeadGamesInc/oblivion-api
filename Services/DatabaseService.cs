@@ -162,7 +162,7 @@ namespace OblivionAPI.Services {
                         await RetrieveOffer(set.ChainID, listing.ID, token.Address, offer.ID, true);
                     
                     var total = await _blockchain.GetListingOffers(set.ChainID, listing.ID, token.Address);
-                    for (var id = listing.Offers.Count; id < total; id++) 
+                    for (var id = listing.Offers.Count(a => a.PaymentToken == token.Address); id < total; id++)
                         await RetrieveOffer(set.ChainID, listing.ID, token.Address, Convert.ToUInt32(id), true);
                 }
             }
