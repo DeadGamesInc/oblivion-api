@@ -13,6 +13,8 @@ namespace OblivionAPI.Objects {
         public string Name { get; set; }
         public string Symbol { get; set; }
         public string URI { get; set; }
+        public string CacheHighRes { get; set; }
+        public string CacheLowRes { get; set; }
         public NFTMetadata Metadata { get; set; }
 
         public readonly List<NFTTokenIDInfo> TokenDetails = new();

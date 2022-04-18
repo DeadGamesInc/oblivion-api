@@ -8,6 +8,7 @@
 using OblivionAPI.Objects;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace OblivionAPI.Config {
     public static class Globals {
@@ -19,11 +20,14 @@ namespace OblivionAPI.Config {
         public static int REDUCED_IMAGE_WIDTH = 100;
         public static int REDUCED_IMAGE_HEIGHT = 100;
 
+        public static string IMAGE_CACHE_PREFIX = "http://localhost:5001/image-cache/";
+
         public const string IPFS_RAW_PREFIX = "ipfs://";
         public const string IPFS_HTTP_PREFIX = "https://ipfs.io/ipfs/";
 
         public static string BASE_DIR = AppDomain.CurrentDomain.BaseDirectory;
-        public static string TEMP_DIR = BASE_DIR + @"temp\";
+        public static string WEB_ROOT = Path.Combine(BASE_DIR, "wwwroot");
+        public static string IMAGE_CACHE_DIR = Path.Combine(WEB_ROOT, "image-cache");
         
         public static readonly List<BlockchainDetails> Blockchains = new() {
             new() { ChainID = ChainID.BSC_Mainnet, Node = "https://bsc-dataseed.binance.org" },
