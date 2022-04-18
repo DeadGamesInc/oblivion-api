@@ -19,3 +19,9 @@ CACHE_TIME - The number of minutes before data is considered stale. Default: 2
 REFRESH_TIME - The number of milliseconds between data refreshes. Default: 300000
 
 THROTTLE_WAIT - The number of milliseconds to pause in certain blockchain operations to avoid getting throttled by the node. Default: 500
+
+REDUCED_IMAGE_WIDTH - The width of the thumbnails generated for the cache. Default: 100
+
+REDUCED_IMAGE_HEIGHT - The height of the thumbnails generated for the cache. Default: 100
+
+IMAGE_CACHE_PREFIX - The image cache URL prefix. Default: TBD

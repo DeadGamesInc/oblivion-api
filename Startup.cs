@@ -5,9 +5,16 @@
  * 
  */
 
+using System;
+using System.IO;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+
+using OblivionAPI.Config;
 using OblivionAPI.Services;
 
 namespace OblivionAPI {
@@ -20,6 +27,7 @@ namespace OblivionAPI {
                         .AllowAnyMethod()
                         .AllowAnyHeader();
                 }));
+            services.AddSingleton<ImageCacheService>();
             services.AddSingleton<LookupService>();
             services.AddSingleton<BlockchainService>();
             services.AddSingleton<DatabaseService>();
@@ -29,7 +37,13 @@ namespace OblivionAPI {
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
+            env.WebRootPath = Globals.WEB_ROOT;
             app.UseDeveloperExceptionPage();
+            app.UseStaticFiles(new StaticFileOptions {
+                ServeUnknownFileTypes = true,
+                FileProvider = new PhysicalFileProvider(Globals.IMAGE_CACHE_DIR),
+                RequestPath = new PathString("/image-cache") 
+            });
             app.UseRouting();
             app.UseCors("Everyone");
             app.UseAuthorization();

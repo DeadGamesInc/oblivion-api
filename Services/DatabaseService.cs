@@ -18,13 +18,16 @@ namespace OblivionAPI.Services {
         private readonly ILogger<DatabaseService> _logger;
         private readonly BlockchainService _blockchain;
         private readonly LookupService _lookup;
+        private readonly ImageCacheService _imageCache;
 
         private readonly List<OblivionDetails> _details;
 
-        public DatabaseService(ILogger<DatabaseService> logger, BlockchainService blockchain, LookupService lookup) {
+        public DatabaseService(ILogger<DatabaseService> logger, BlockchainService blockchain, LookupService lookup, ImageCacheService imageCache) {
             _logger = logger;
             _blockchain = blockchain;
             _lookup = lookup;
+            _imageCache = imageCache;
+            
             _details = new List<OblivionDetails> {
                 new() { ChainID = ChainID.BSC_Mainnet },
                 new() { ChainID = ChainID.BSC_Testnet }
@@ -97,7 +100,7 @@ namespace OblivionAPI.Services {
         }
 
         public async Task<NFTDetails> NFTDetails(ChainID chainID, string address) {
-            return await RetrieveNFT(chainID, address);
+            return await RetrieveNFT(chainID, address, false);
         }
 
         public async Task<NFTTokenIDInfo> NFTTokenURI(ChainID chainID, string address, uint tokenID) {
@@ -122,6 +125,10 @@ namespace OblivionAPI.Services {
 
         public async Task<ReleaseDetails> RefreshRelease(ChainID chainID, uint id) {
             return await RetrieveRelease(chainID, id, true);
+        }
+
+        public async Task<NFTDetails> RefreshNft(ChainID chainID, string address) {
+            return await RetrieveNFT(chainID, address, true);
         }
 
         public async Task HandleUpdate() {
@@ -152,7 +159,7 @@ namespace OblivionAPI.Services {
 
             foreach (var listing in set.Listings.Where(a => !a.Finalized)) {
                 var checkNft = set.NFTs.Find(a => a.Address == listing.NFT);
-                if (checkNft == null) await RetrieveNFT(set.ChainID, listing.NFT);
+                if (checkNft == null) await RetrieveNFT(set.ChainID, listing.NFT, false);
                 
                 var payments = Globals.Payments.Find(a => a.ChainID == set.ChainID);
                 if (payments == null) continue;
@@ -260,21 +267,30 @@ namespace OblivionAPI.Services {
             return collection;
         }
         
-        private async Task<NFTDetails> RetrieveNFT(ChainID chainID, string address) {
+        private async Task<NFTDetails> RetrieveNFT(ChainID chainID, string address, bool forceUpdate) {
             var details = _details.Find(a => a.ChainID == chainID);
             if (details == null) return null;
 
             var nft = details.NFTs.Find(a => a.Address == address);
-            if (nft == null) {
+            if (nft == null || forceUpdate) {
                 nft = await _blockchain.GetNFTDetails(chainID, address);
                 if (nft != null) details.NFTs.Add(nft);
             }
 
-            if (nft is { Metadata: null }) {
+            if (nft == null) return null;
+
+            if (nft is { Metadata: null } || forceUpdate) {
                 var metadata = await _lookup.GetNFTMetadata(nft.URI);
-                if (metadata != null) nft.Metadata = new NFTMetadata(metadata);
+                if (metadata != null || forceUpdate) {
+                    nft.Metadata = new NFTMetadata(metadata);
+                    var cache = await _imageCache.ImageCache(chainID, address, nft.Metadata.Image, forceUpdate);
+                    nft.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
+                    if (!string.IsNullOrEmpty(cache.LowResImage)) nft.CacheLowRes = cache.LowResImage;
+                    else nft.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
+                }
             }
-            
+
+
             return nft;
         }
         
@@ -285,7 +301,7 @@ namespace OblivionAPI.Services {
             var nft = details.NFTs.Find(a => a.Address == address);
             
             if (nft == null) {
-                nft = await RetrieveNFT(chainID, address);
+                nft = await RetrieveNFT(chainID, address, false);
                 if (nft == null) return null;
             }
 

@@ -11,13 +11,15 @@ using OblivionAPI.Config;
 using Serilog;
 using Serilog.Events;
 using System;
+using System.IO;
 
 namespace OblivionAPI {
     public static class Program {
         public static void Main() {
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
+                .MinimumLevel.Information()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+                .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
                 .WriteTo.Console()
                 .CreateLogger();
 
@@ -32,6 +34,18 @@ namespace OblivionAPI {
             if (Environment.GetEnvironmentVariable("THROTTLE_WAIT") != null) 
                 Globals.THROTTLE_WAIT = Convert.ToInt32(Environment.GetEnvironmentVariable("THROTTLE_WAIT"));
 
+            if (Environment.GetEnvironmentVariable("REDUCED_IMAGE_WIDTH") != null)
+                Globals.REDUCED_IMAGE_WIDTH = Convert.ToInt32(Environment.GetEnvironmentVariable("REDUCED_IMAGE_WIDTH"));
+
+            if (Environment.GetEnvironmentVariable("REDUCED_IMAGE_HEIGHT") != null)
+                Globals.REDUCED_IMAGE_HEIGHT = Convert.ToInt32(Environment.GetEnvironmentVariable("REDUCED_IMAGE_HEIGHT"));
+
+            if (Environment.GetEnvironmentVariable("IMAGE_CACHE_PREFIX") != null)
+                Globals.IMAGE_CACHE_PREFIX = Environment.GetEnvironmentVariable("IMAGE_CACHE_PREFIX");
+            
+            if (!Directory.Exists(Globals.WEB_ROOT)) Directory.CreateDirectory(Globals.WEB_ROOT);
+            if (!Directory.Exists(Globals.IMAGE_CACHE_DIR)) Directory.CreateDirectory(Globals.IMAGE_CACHE_DIR);
+            
             var host = CreateHost();
 
             try {
@@ -47,6 +61,7 @@ namespace OblivionAPI {
                 .CreateDefaultBuilder()
                 .ConfigureWebHostDefaults(webBuilder => {
                     webBuilder
+                        .UseContentRoot(Globals.WEB_ROOT)
                         .UseStartup<Startup>()
                         .UseUrls($"http://*:{Globals.LISTEN_PORT}")
                         .UseKestrel();

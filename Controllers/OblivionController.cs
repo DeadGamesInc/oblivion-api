@@ -306,5 +306,14 @@ namespace OblivionAPI.Controllers {
             if (release == null) return NotFound(null);
             return Ok(release);
         }
+        
+        [HttpGet]
+        [Route("refreshNft/{address}")]
+        public async Task<ActionResult<NFTDetails>> RefreshNft(string address) {
+            _logger.LogInformation("refreshNft for {Address} on {ChainID}", address, _chainID);
+            var nft = await _database.RefreshNft(_chainID, address);
+            if (nft == null) return NotFound(null);
+            return Ok(nft);
+        }
     }
 }
