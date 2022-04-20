@@ -13,6 +13,8 @@ namespace OblivionAPI.Objects {
         public ChainID ChainID;
         public DateTime LastRetrieved = DateTime.MinValue;
         public uint TotalListings;
+        public uint TotalListingsV1;
+        public uint TotalListingsV2;
         public uint TotalCollections;
         public uint TotalReleases;
         

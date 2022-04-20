@@ -12,6 +12,7 @@ using System.Collections.Generic;
 namespace OblivionAPI.Objects {
     public class ListingDetails {
         public uint ID { get; set; }
+        public int Version { get; set; }
         public DateTime LastRetrieved;
         public string Owner { get; set; }
         public string PaymentToken { get; set; }
@@ -33,8 +34,9 @@ namespace OblivionAPI.Objects {
 
         public List<OfferDetails> Offers = new();
         
-        public ListingDetails(uint id, ListingResponse response) {
+        public ListingDetails(uint id, int version, ListingResponse response) {
             ID = id;
+            Version = version;
             Owner = response.Owner;
             PaymentToken = response.PaymentToken;
             NFT = response.NFT;

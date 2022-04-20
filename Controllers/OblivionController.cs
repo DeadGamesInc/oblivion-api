@@ -125,46 +125,46 @@ namespace OblivionAPI.Controllers {
         }
         
         [HttpGet]
-        [Route("getListing/{id}")]
-        public async Task<ActionResult<ListingDetails>> GetListing(uint id) {
+        [Route("getListing/{version:int}/{id}")]
+        public async Task<ActionResult<ListingDetails>> GetListing(int version, uint id) {
             _logger.LogInformation("getListing {ListingID} on {ChainID}", id, _chainID);
-            var details = await _database.ListingDetails(_chainID, id);
+            var details = await _database.ListingDetails(_chainID, version, id);
             if (details == null) return NotFound(null);
             return Ok(details);
         }
 
         [HttpGet]
-        [Route("getTotalOffers/{id}")]
-        public async Task<ActionResult<uint>> GetTotalOffers(uint id) {
+        [Route("getTotalOffers/{version:int}/{id}")]
+        public async Task<ActionResult<uint>> GetTotalOffers(int version, uint id) {
             _logger.LogInformation("getTotalOffers for listing {ID} on {ChainID}", id, _chainID);
-            var offers = await _database.TotalOffers(_chainID, id);
+            var offers = await _database.TotalOffers(_chainID, id, version);
             return Ok(offers);
         }
         
         [HttpGet]
-        [Route("getOffers/{id}")]
-        public async Task<ActionResult<OfferDetails[]>> GetOffers(uint id) {
+        [Route("getOffers/{version:int}/{id}")]
+        public async Task<ActionResult<OfferDetails[]>> GetOffers(int version, uint id) {
             _logger.LogInformation("getOffers for {ID} on {ChainID}", id, _chainID);
-            var offers = await _database.GetOffers(_chainID, id);
+            var offers = await _database.GetOffers(_chainID, id, version);
             if (offers == null) return NotFound(null);
             return Ok(offers.ToArray());
         }
 
         [HttpGet]
-        [Route("getOpenOffers/{id}")]
-        public async Task<ActionResult<OfferDetails[]>> GetOpenOffers(uint id) {
+        [Route("getOpenOffers/{version:int}/{id}")]
+        public async Task<ActionResult<OfferDetails[]>> GetOpenOffers(int version, uint id) {
             _logger.LogInformation("getOpenOffers for {ID} on {ChainID}", id, _chainID);
-            var offers = await _database.GetOffers(_chainID, id);
+            var offers = await _database.GetOffers(_chainID, id, version);
             if (offers == null) return NotFound(null);
             var list = offers.Where(a => !a.Claimed);
             return Ok(list.ToArray());
         }
 
         [HttpGet]
-        [Route("getOffer/{id}/{paymentToken}/{offerID}")]
-        public async Task<ActionResult<OfferDetails>> GetOffer(uint id, string paymentToken, uint offerID) {
+        [Route("getOffer/{version:int}/{id}/{paymentToken}/{offerID}")]
+        public async Task<ActionResult<OfferDetails>> GetOffer(int version, uint id, string paymentToken, uint offerID) {
             _logger.LogInformation("getOffer {PaymentToken}:{OfferID} on {ChainID}", id, paymentToken, _chainID);
-            var details = await _database.OfferDetails(_chainID, id, paymentToken, offerID);
+            var details = await _database.OfferDetails(_chainID, version, id, paymentToken, offerID);
             if (details == null) return NotFound(null);
             return Ok(details);
         }
@@ -272,19 +272,19 @@ namespace OblivionAPI.Controllers {
         }
 
         [HttpGet]
-        [Route("refreshListing/{id}")]
-        public async Task<ActionResult<ListingDetails>> RefreshListing(uint id) {
+        [Route("refreshListing/{version:int}/{id}")]
+        public async Task<ActionResult<ListingDetails>> RefreshListing(int version, uint id) {
             _logger.LogInformation("refreshListing for {ID} on {ChainID}", id, _chainID);
-            var listing = await _database.RefreshListing(_chainID, id);
+            var listing = await _database.RefreshListing(_chainID, version, id);
             if (listing == null) return NotFound(null);
             return Ok(listing);
         }
 
         [HttpGet]
-        [Route("refreshOffer/{listingId}/{paymentToken}/{id}")]
-        public async Task<ActionResult<OfferDetails>> RefreshOffer(uint listingId, string paymentToken, uint id) {
+        [Route("refreshOffer/{version:int}/{listingId}/{paymentToken}/{id}")]
+        public async Task<ActionResult<OfferDetails>> RefreshOffer(int version, uint listingId, string paymentToken, uint id) {
             _logger.LogInformation("refreshOffer {ListingID}:{PaymentToken}:{OfferID} on {ChainID}", listingId, paymentToken, id, _chainID);
-            var offer = await _database.RefreshOffer(_chainID, listingId, paymentToken, id);
+            var offer = await _database.RefreshOffer(_chainID, version, listingId, paymentToken, id);
             if (offer == null) return NotFound(null);
             return Ok(offer);
         }

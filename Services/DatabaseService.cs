@@ -39,9 +39,9 @@ namespace OblivionAPI.Services {
             return details?.TotalListings ?? 0;
         }
         
-        public async Task<uint> TotalOffers(ChainID chainID, uint id) {
+        public async Task<uint> TotalOffers(ChainID chainID, uint id, int version) {
             var details = _details.Find(a => a.ChainID == chainID);
-            var listing = details?.Listings.Find(a => a.ID == id);
+            var listing = details?.Listings.Find(a => a.ID == id && a.Version == version);
             return listing == null ? 0 : Convert.ToUInt32(listing.Offers.Count);
         }
         
@@ -66,9 +66,9 @@ namespace OblivionAPI.Services {
             return details?.Listings.ToList();
         }
 
-        public async Task<List<OfferDetails>> GetOffers(ChainID chainID, uint id) {
+        public async Task<List<OfferDetails>> GetOffers(ChainID chainID, uint id, int version) {
             var details = _details.Find(a => a.ChainID == chainID);
-            var listing = details?.Listings.Find(a => a.ID == id);
+            var listing = details?.Listings.Find(a => a.ID == id && a.Version == version);
             return listing?.Offers.ToList();
         }
         
@@ -87,12 +87,12 @@ namespace OblivionAPI.Services {
             return tokens?.PaymentTokens;
         }
 
-        public async Task<ListingDetails> ListingDetails(ChainID chainID, uint id) {
-            return await RetrieveListing(chainID, id, false);
+        public async Task<ListingDetails> ListingDetails(ChainID chainID, int version, uint id) {
+            return await RetrieveListing(chainID, version, id, false);
         }
 
-        public async Task<OfferDetails> OfferDetails(ChainID chainID, uint id, string paymentToken, uint offerID) {
-            return await RetrieveOffer(chainID, id, paymentToken, offerID, false);
+        public async Task<OfferDetails> OfferDetails(ChainID chainID, int version, uint id, string paymentToken, uint offerID) {
+            return await RetrieveOffer(chainID, version, id, paymentToken, offerID, false);
         }
 
         public async Task<CollectionDetails> CollectionDetails(ChainID chainID, uint id) {
@@ -111,12 +111,12 @@ namespace OblivionAPI.Services {
             return await RetrieveRelease(chainID, id, false);
         }
         
-        public async Task<ListingDetails> RefreshListing(ChainID chainID, uint id) {
-            return await RetrieveListing(chainID, id, true);
+        public async Task<ListingDetails> RefreshListing(ChainID chainID, int version, uint id) {
+            return await RetrieveListing(chainID, version, id, true);
         }
 
-        public async Task<OfferDetails> RefreshOffer(ChainID chainID, uint id, string paymentToken, uint offerID) {
-            return await RetrieveOffer(chainID, id, paymentToken, offerID, true);
+        public async Task<OfferDetails> RefreshOffer(ChainID chainID, int version, uint id, string paymentToken, uint offerID) {
+            return await RetrieveOffer(chainID, version, id, paymentToken, offerID, true);
         }
 
         public async Task<CollectionDetails> RefreshCollection(ChainID chainID, uint id) {
@@ -146,16 +146,20 @@ namespace OblivionAPI.Services {
         private async Task UpdateBasicDetails(ChainID chainID) {
             var details = _details.Find(a => a.ChainID == chainID);
             if (details == null) return;
-            
-            details.TotalListings = await _blockchain.GetTotalListings(details.ChainID);
+
+            details.TotalListingsV1 = await _blockchain.GetTotalListings(details.ChainID, 1);
+            details.TotalListingsV2 = await _blockchain.GetTotalListings(details.ChainID, 2);
+            details.TotalListings = details.TotalListingsV1 + details.TotalListingsV2;
             details.TotalCollections = await _blockchain.GetTotalCollections(details.ChainID);
             details.TotalReleases = await _blockchain.GetTotalReleases(details.ChainID);
             details.LastRetrieved = DateTime.Now;
         }
 
         private async Task UpdateListings(OblivionDetails set) {
-            foreach (var listing in set.Listings.Where(a => !a.Finalized)) await RetrieveListing(set.ChainID, listing.ID, true);
-            for (var id = set.Listings.Count; id < set.TotalListings; id++) await RetrieveListing(set.ChainID, Convert.ToUInt32(id), true);
+            foreach (var listing in set.Listings.Where(a => !a.Finalized)) await RetrieveListing(set.ChainID, listing.Version, listing.ID, true);
+            
+            for (var id = set.Listings.Count(a => a.Version == 1); id < set.TotalListingsV1; id++) await RetrieveListing(set.ChainID, 1, Convert.ToUInt32(id), true);
+            for (var id = set.Listings.Count(a => a.Version == 2); id < set.TotalListingsV2; id++) await RetrieveListing(set.ChainID, 2, Convert.ToUInt32(id), true);
 
             foreach (var listing in set.Listings.Where(a => !a.Finalized)) {
                 var checkNft = set.NFTs.Find(a => a.Address == listing.NFT);
@@ -166,15 +170,15 @@ namespace OblivionAPI.Services {
                 
                 foreach (var token in payments.PaymentTokens) {
                     foreach (var offer in listing.Offers.Where(a => a.PaymentToken == token.Address && !a.Claimed)) 
-                        await RetrieveOffer(set.ChainID, listing.ID, token.Address, offer.ID, true);
+                        await RetrieveOffer(set.ChainID, listing.Version, listing.ID, token.Address, offer.ID, true);
                     
-                    var total = await _blockchain.GetListingOffers(set.ChainID, listing.ID, token.Address);
+                    var total = await _blockchain.GetListingOffers(set.ChainID, listing.Version, listing.ID, token.Address);
                     for (var id = listing.Offers.Count(a => a.PaymentToken == token.Address); id < total; id++)
-                        await RetrieveOffer(set.ChainID, listing.ID, token.Address, Convert.ToUInt32(id), true);
+                        await RetrieveOffer(set.ChainID, listing.Version, listing.ID, token.Address, Convert.ToUInt32(id), true);
                 }
             }
             
-            foreach (var listing in set.Listings.Where(a => !a.Finalized && a.SaleState != 0)) await FinalizeListing(set.ChainID, listing);
+            foreach (var listing in set.Listings.Where(a => !a.Finalized && a.SaleState != 0)) await FinalizeListing(set.ChainID, listing.Version, listing);
         }
 
         private async Task UpdateCollections(OblivionDetails set) {
@@ -192,9 +196,9 @@ namespace OblivionAPI.Services {
                 await RetrieveRelease(set.ChainID, Convert.ToUInt32(id), true);
         }
 
-        private async Task FinalizeListing(ChainID chainID, ListingDetails listing) {
+        private async Task FinalizeListing(ChainID chainID, int version, ListingDetails listing) {
             listing.Finalized = true;
-            var sale = await _blockchain.CheckSale(chainID, listing);
+            var sale = await _blockchain.CheckSale(chainID, version, listing);
             if (sale != null) {
                 listing.WasSold = true;
                 listing.SaleInformation = sale;
@@ -208,40 +212,40 @@ namespace OblivionAPI.Services {
             foreach (var token in payments.PaymentTokens) token.Price = await _lookup.GetCurrentPrice(token.CoinGeckoKey);
         }
 
-        private async Task<ListingDetails> RetrieveListing(ChainID chainID, uint id, bool forceUpdate) {
+        private async Task<ListingDetails> RetrieveListing(ChainID chainID, int version, uint id, bool forceUpdate) {
             var details = _details.Find(a => a.ChainID == chainID);
             if (details == null) return null;
             
-            var listing = details.Listings.Find(a => a.ID == id);
+            var listing = details.Listings.Find(a => a.ID == id && a.Version == version);
             
             if (listing == null) {
-                listing = await _blockchain.GetListing(chainID, id);
+                listing = await _blockchain.GetListing(chainID, version, id);
                 if (listing == null) return null;
                 details.Listings.Add(listing);
             }
 
             if (DateTime.Now - listing.LastRetrieved > TimeSpan.FromMinutes(Globals.CACHE_TIME) || forceUpdate) {
-                var result = await _blockchain.GetListing(chainID, id);
+                var result = await _blockchain.GetListing(chainID, version, id);
                 listing.Update(result);
             }
             
             return listing;
         }
 
-        private async Task<OfferDetails> RetrieveOffer(ChainID chainID, uint id, string paymentToken, uint offerID, bool forceUpdate) {
+        private async Task<OfferDetails> RetrieveOffer(ChainID chainID, int version, uint id, string paymentToken, uint offerID, bool forceUpdate) {
             var details = _details.Find(a => a.ChainID == chainID);
-            var listing = details?.Listings.Find(a => a.ID == id);
+            var listing = details?.Listings.Find(a => a.ID == id && a.Version == version);
             if (listing == null) return null;
 
             var offer = listing.Offers.Find(a => a.PaymentToken == paymentToken && a.ID == offerID);
             if (offer == null) {
-                offer = await _blockchain.GetOffer(chainID, id, paymentToken, offerID);
+                offer = await _blockchain.GetOffer(chainID, version, id, paymentToken, offerID);
                 if (offer == null) return null;
                 listing.Offers.Add(offer);
             }
 
             if (DateTime.Now - offer.LastRetrieved > TimeSpan.FromMinutes(Globals.CACHE_TIME) || forceUpdate) {
-                var result = await _blockchain.GetOffer(chainID, id, paymentToken, offerID);
+                var result = await _blockchain.GetOffer(chainID, version, id, paymentToken, offerID);
                 offer.Update(result);
             }
 

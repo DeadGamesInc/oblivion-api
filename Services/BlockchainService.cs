@@ -33,12 +33,7 @@ namespace OblivionAPI.Services {
             try {
                 _logger.LogDebug("Retrieving details for NFT {Address} on {ChainID}", address, chainID);
 
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
-
+                var web3 = GetWeb3(chainID);
                 if (web3 == null) return null;
 
                 var nft = new NFTDetails { Address = address };
@@ -66,12 +61,7 @@ namespace OblivionAPI.Services {
                 _logger.LogDebug("Retrieving details for tokenID {TokenID} on NFT {Address} on {ChainID}", tokenID, address,
                     chainID);
 
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
-
+                var web3 = GetWeb3(chainID);
                 if (web3 == null) return null;
 
                 var contract = web3.Eth.GetContract(ABIs.OblivionNFT, address);
@@ -85,16 +75,12 @@ namespace OblivionAPI.Services {
             }
         }
 
-        public async Task<uint> GetTotalListings(ChainID chainID) {
+        public async Task<uint> GetTotalListings(ChainID chainID, int version) {
             try {
-                _logger.LogDebug("Retrieving total listings for {ChainID}", chainID);
+                _logger.LogDebug("Retrieving total listings for {ChainID}:V{Version}", chainID, version);
 
-                var address = Contracts.OblivionMarket.GetAddress(chainID);
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                var address = GetMarketAddress(chainID, version);
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null || string.IsNullOrEmpty(address)) return 0;
 
@@ -109,17 +95,13 @@ namespace OblivionAPI.Services {
             }
         }
 
-        public async Task<uint> GetListingOffers(ChainID chainID, uint id, string paymentToken) {
+        public async Task<uint> GetListingOffers(ChainID chainID, int version, uint id, string paymentToken) {
             try {
-                _logger.LogDebug("Retrieving offer count for listing {ID} with payment token {PaymentToken} on {ChainID}", id,
-                    paymentToken, chainID);
+                _logger.LogDebug("Retrieving offer count for listing {ID} with payment token {PaymentToken} on {ChainID}:V{Version}", id,
+                    paymentToken, chainID, version);
 
-                var address = Contracts.OblivionMarket.GetAddress(chainID);
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                var address = GetMarketAddress(chainID, version);
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null || string.IsNullOrEmpty(address)) return 0;
 
@@ -134,16 +116,12 @@ namespace OblivionAPI.Services {
             }
         }
 
-        public async Task<ListingDetails> GetListing(ChainID chainID, uint id) {
+        public async Task<ListingDetails> GetListing(ChainID chainID, int version, uint id) {
             try {
-                _logger.LogDebug("Retrieving listing details for {ID} on {ChainID}", id, chainID);
+                _logger.LogDebug("Retrieving listing details for {ID} on {ChainID}:V{Version}", id, chainID, version);
 
-                var address = Contracts.OblivionMarket.GetAddress(chainID);
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                var address = GetMarketAddress(chainID, version);
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null || string.IsNullOrEmpty(address)) return null;
 
@@ -151,22 +129,18 @@ namespace OblivionAPI.Services {
                 var getFunction = contract.GetFunction("listings");
                 var result = await getFunction.CallAsync<ListingResponse>(id);
                 
-                return new ListingDetails(id, result);
+                return new ListingDetails(id, version, result);
             } catch (Exception error) {
                 _logger.LogError(error, "An exception occured retrieving details for listing id {ID} on {ChainID}", id, chainID);
                 return null;
             }
         }
 
-        public async Task<OfferDetails> GetOffer(ChainID chainID, uint listingID, string paymentToken, uint offerID) {
+        public async Task<OfferDetails> GetOffer(ChainID chainID, int version, uint listingID, string paymentToken, uint offerID) {
             try {
-                _logger.LogDebug("Retrieving details for offer {PaymentToken}:{OfferID} on listing {ListingID} on {ChainID}", paymentToken, offerID, listingID, chainID);
-                var address = Contracts.OblivionMarket.GetAddress(chainID);
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                _logger.LogDebug("Retrieving details for offer {PaymentToken}:{OfferID} on listing {ListingID} on {ChainID}:V{Version}", paymentToken, offerID, listingID, chainID, version);
+                var address = GetMarketAddress(chainID, version);
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null || string.IsNullOrEmpty(address)) return null;
 
@@ -175,24 +149,20 @@ namespace OblivionAPI.Services {
 
                 var result = await getFunction.CallAsync<OfferResponse>(listingID, paymentToken, offerID);
                 
-                return new OfferDetails(paymentToken, offerID, result);
+                return new OfferDetails(paymentToken, offerID, version, result);
             } catch (Exception error) {
                 _logger.LogError(error, "An exception occured retrieving details for offer {PaymentToken}:{OfferID} on listing {ListingID} on {ChainID}", paymentToken, offerID, listingID, chainID);
                 return null;
             }
         }
 
-        public async Task<OblivionSaleInformation> CheckSale(ChainID chainID, ListingDetails listing) {
-            _logger.LogDebug("Checking sale details for {ListingID} on {ChainID}", listing.ID, chainID);
+        public async Task<OblivionSaleInformation> CheckSale(ChainID chainID, int version, ListingDetails listing) {
+            _logger.LogDebug("Checking sale details for {ListingID} on {ChainID}:V{Version}", listing.ID, chainID, version);
             
             try {
                 Thread.Sleep(Globals.THROTTLE_WAIT);
-                var address = Contracts.OblivionMarket.GetAddress(chainID);
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                var address = GetMarketAddress(chainID, version);
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null || string.IsNullOrEmpty(address)) return null;
 
@@ -234,12 +204,7 @@ namespace OblivionAPI.Services {
 
         private async Task<DateTime> GetBlockTimestamp(ChainID chainID, BlockParameter block) {
             try {
-                var web3 = chainID switch
-                {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null) return DateTime.MinValue;
 
@@ -255,12 +220,7 @@ namespace OblivionAPI.Services {
             try {
                 _logger.LogDebug("Getting total collections on {ChainID}", chainID);
                 var address = Contracts.OblivionCollectionManager.GetAddress(chainID);
-
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null || string.IsNullOrEmpty(address)) return 0;
 
@@ -277,12 +237,7 @@ namespace OblivionAPI.Services {
             try {
                 _logger.LogDebug("Getting collection details for {ID} on {ChainID}", id, chainID);
                 var address = Contracts.OblivionCollectionManager.GetAddress(chainID);
-
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null || string.IsNullOrEmpty(address)) return null;
 
@@ -306,12 +261,7 @@ namespace OblivionAPI.Services {
             try {
                 _logger.LogDebug("Getting total releases on {ChainID}", chainID);
                 var address = Contracts.OblivionMintingService.GetAddress(chainID);
-
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null || string.IsNullOrEmpty(address)) return 0;
 
@@ -329,11 +279,7 @@ namespace OblivionAPI.Services {
                 _logger.LogDebug("Retrieving release details for {ID} on {ChainID}", id, chainID);
 
                 var address = Contracts.OblivionMintingService.GetAddress(chainID);
-                var web3 = chainID switch {
-                    ChainID.BSC_Mainnet => _bsc,
-                    ChainID.BSC_Testnet => _bscTestnet,
-                    _ => null
-                };
+                var web3 = GetWeb3(chainID);
 
                 if (web3 == null || string.IsNullOrEmpty(address)) return null;
 
@@ -349,6 +295,22 @@ namespace OblivionAPI.Services {
                 _logger.LogError(error, "An exception occured retrieving details for release id {ID} on {ChainID}", id, chainID);
                 return null;
             }
+        }
+
+        private static string GetMarketAddress(ChainID chainID, int version) {
+            return version switch {
+                1 => Contracts.OblivionMarket.GetAddress(chainID),
+                2 => Contracts.OblivionMarketV2.GetAddress(chainID),
+                _ => null
+            };
+        }
+
+        private Web3 GetWeb3(ChainID chainID) {
+            return chainID switch {
+                ChainID.BSC_Mainnet => _bsc,
+                ChainID.BSC_Testnet => _bscTestnet,
+                _ => null
+            };
         }
     }
 }
