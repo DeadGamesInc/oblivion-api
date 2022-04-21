@@ -5,9 +5,11 @@
  * 
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace OblivionAPI.Objects {
+    [Serializable]
     public class NFTMetadata {
         public string Name { get; set; }
         public string Description { get; set; }

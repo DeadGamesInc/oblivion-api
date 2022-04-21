@@ -24,7 +24,7 @@ namespace OblivionAPI.Responses {
         [Parameter("uint", "", 6)]
         public uint TokenID { get; set; }
         [Parameter("uint", "", 7)]
-        public uint SaleEnd { get; set; }
+        public BigInteger SaleEnd { get; set; }
         [Parameter("uint", "", 8)]
         public uint GraceEnd { get; set; }
         [Parameter("uint", "", 9)]

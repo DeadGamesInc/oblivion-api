@@ -5,9 +5,11 @@
  * 
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace OblivionAPI.Objects {
+    [Serializable]
     public class NFTDetails {
         public string Address { get; set; }
         public string Name { get; set; }

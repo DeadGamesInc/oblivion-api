@@ -9,6 +9,7 @@ using OblivionAPI.Responses;
 using System;
 
 namespace OblivionAPI.Objects {
+    [Serializable]
     public class CollectionDetails {
         public uint ID { get; set; }
         public string Owner { get; set; }

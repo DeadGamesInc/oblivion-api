@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 
 namespace OblivionAPI.Objects {
+    [Serializable]
     public class ListingDetails {
         public uint ID { get; set; }
         public int Version { get; set; }
@@ -20,7 +21,7 @@ namespace OblivionAPI.Objects {
         public string TargetPrice { get; set; }
         public string MinimumPrice { get; set; }
         public uint TokenId { get; set; }
-        public uint SaleEnd { get; set; }
+        public string SaleEnd { get; set; }
         public uint GraceEnd { get; set; }
         public uint CreateBlock { get; set; }
         public uint ClosedBlock { get; set; }
@@ -43,7 +44,7 @@ namespace OblivionAPI.Objects {
             TargetPrice = response.TargetPrice.ToString();
             MinimumPrice = response.MinimumPrice.ToString();
             TokenId = response.TokenID;
-            SaleEnd = response.SaleEnd;
+            SaleEnd = response.SaleEnd.ToString();
             GraceEnd = response.GraceEnd;
             CreateBlock = response.CreateBlock;
             ClosedBlock = response.ClosedBlock;

@@ -16,7 +16,7 @@ namespace OblivionAPI.Controllers {
     [ApiController]
     [Route("/bsc_testnet/")]
     public class BSCTestnetController : OblivionController {
-        public BSCTestnetController(ILogger<BSCTestnetController> logger, DatabaseService database) 
-            : base(logger, database, ChainID.BSC_Testnet) {}
+        public BSCTestnetController(ILogger<BSCTestnetController> logger, DatabaseService database, ReportsService reports) 
+            : base(logger, database, reports, ChainID.BSC_Testnet) {}
     }
 }

@@ -7,6 +7,8 @@ namespace OblivionAPI.Objects {
         public string PaymentToken { get; set; }
         public string Buyer { get; set; }
         public string Seller { get; set; }
+        public string Nft { get; set; }
+        public uint? CollectionId { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime SaleDate { get; set; }
     }

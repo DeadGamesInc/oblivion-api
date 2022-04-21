@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using OblivionAPI.Config;
 using OblivionAPI.Objects;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -20,6 +21,8 @@ namespace OblivionAPI.Services {
         private readonly ILogger<LookupService> _logger;
         private readonly IHttpClientFactory _httpFactory;
         private readonly ICoinGeckoClient _coinGecko;
+
+        private readonly List<CachedPrice> _prices = new();
 
         public LookupService(ILogger<LookupService> logger, IHttpClientFactory httpFactory) {
             _logger = logger;
@@ -48,10 +51,22 @@ namespace OblivionAPI.Services {
 
         public async Task<decimal> GetCurrentPrice(string id) {
             try {
-                _logger.LogInformation("Looking up token price for {ID}", id);
+                _logger.LogDebug("Looking up token price for {ID}", id);
+                
                 if (string.IsNullOrEmpty(id)) return 0;
+                var check = _prices.Find(a => a.CoinGeckoKey == id);
+                if (DateTime.Now - check?.LastRetrieved < TimeSpan.FromMinutes(Globals.CACHE_TIME)) return check.Price;
+                
                 var result = await _coinGecko.SimpleClient.GetSimplePrice(new[] { id }, new[] { "usd" });
-                return result[id]["usd"] ?? 0;
+                if (check == null) {
+                    check = new CachedPrice { CoinGeckoKey = id };
+                    _prices.Add(check);
+                }
+
+                check.Price = result[id]["usd"] ?? 0;
+                check.LastRetrieved = DateTime.Now;
+                
+                return check.Price;
             } catch (Exception error) {
                 _logger.LogError(error, "An exception occured while retrieving crypto price for {ID}", id);
                 return 0;

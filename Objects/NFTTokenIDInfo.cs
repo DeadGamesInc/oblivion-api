@@ -5,7 +5,10 @@
  * 
  */
 
+using System;
+
 namespace OblivionAPI.Objects {
+    [Serializable]
     public class NFTTokenIDInfo {
         public uint TokenId { get; set; }
         public string URI { get; set; }

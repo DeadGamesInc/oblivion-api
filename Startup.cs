@@ -5,15 +5,11 @@
  * 
  */
 
-using System;
-using System.IO;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-
 using OblivionAPI.Config;
 using OblivionAPI.Services;
 
@@ -31,6 +27,7 @@ namespace OblivionAPI {
             services.AddSingleton<LookupService>();
             services.AddSingleton<BlockchainService>();
             services.AddSingleton<DatabaseService>();
+            services.AddSingleton<ReportsService>();
             services.AddControllers();
             services.AddHostedService<MonitorService>();
             services.AddHttpClient();

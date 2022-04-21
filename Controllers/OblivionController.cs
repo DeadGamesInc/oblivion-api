@@ -14,16 +14,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using OblivionAPI.Reports;
+
 namespace OblivionAPI.Controllers {
     [ApiController]
     public abstract class OblivionController : ControllerBase {
         private readonly ILogger<OblivionController> _logger;
         private readonly DatabaseService _database;
+        private readonly ReportsService _reports;
         private readonly ChainID _chainID;
 
-        protected OblivionController(ILogger<OblivionController> logger, DatabaseService database, ChainID chainID) {
+        protected OblivionController(ILogger<OblivionController> logger, DatabaseService database, ReportsService reports, ChainID chainID) {
             _logger = logger;
             _database = database;
+            _reports = reports;
             _chainID = chainID;
         }
 
@@ -314,6 +318,15 @@ namespace OblivionAPI.Controllers {
             var nft = await _database.RefreshNft(_chainID, address);
             if (nft == null) return NotFound(null);
             return Ok(nft);
+        }
+
+        [HttpGet]
+        [Route("get24HourVolume")]
+        public async Task<ActionResult<SalesReport_24HVolume>> SalesReport_24HVolume() {
+            _logger.LogInformation("get24HourVolume on {ChainID}", _chainID);
+            var report = await _reports.SalesReport_24HVolume(_chainID);
+            if (report == null) return NotFound(null);
+            return Ok(report);
         }
     }
 }
