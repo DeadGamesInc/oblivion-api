@@ -58,6 +58,41 @@ namespace OblivionAPI.Services {
                 report.Collections.Add(new SalesReport_CollectionVolume(collection.ID, collectionVolume));
             }
 
+            var releaseSales = await _database.GetReleaseSales(chainID);
+            if (releaseSales == null) return report;
+
+            var releaseSales24Hour = releaseSales.Where(a => DateTime.Now - a.SaleTime < TimeSpan.FromHours(24));
+            report.TotalReleaseSales = releaseSales24Hour.Count();
+
+            decimal totalReleaseVolume = 0;
+            
+            foreach (var token in payments.PaymentTokens) {
+                var tokenSales = releaseSales24Hour.Where(a => a.PaymentToken == token.Address);
+                var tokenVolume = new BigInteger();
+                tokenVolume = tokenSales.Select(sale => BigInteger.Parse(sale.Price) * sale.Quantity).Aggregate(tokenVolume, (current, amount) => current + amount);
+                totalReleaseVolume += await ConvertTokensToUSD(tokenVolume, token.Decimals, token.CoinGeckoKey);
+            }
+
+            report.TotalReleaseVolume = totalReleaseVolume;
+
+            var releases = await _database.GetReleases(chainID);
+            
+            foreach (var release in releases) {
+                var releaseSalesCheck = releaseSales24Hour.Where(a => a.ID == release.ID);
+                decimal releaseVolume = 0;
+                
+                foreach (var token in payments.PaymentTokens) {
+                    var tokenSales = releaseSalesCheck.Where(a => a.PaymentToken == token.Address);
+                    
+                    var tokenVolume = new BigInteger();
+                    tokenVolume = tokenSales.Select(sale => BigInteger.Parse(sale.Price) * sale.Quantity).Aggregate(tokenVolume, (current, amount) => current + amount);
+
+                    releaseVolume += await ConvertTokensToUSD(tokenVolume, token.Decimals, token.CoinGeckoKey);
+                }
+                
+                report.Releases.Add(new SalesReport_ReleaseVolume(release.ID, releaseVolume));
+            }
+
             return report;
         }
 

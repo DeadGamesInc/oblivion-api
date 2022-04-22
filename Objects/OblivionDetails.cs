@@ -10,6 +10,9 @@ using System.Collections.Generic;
 namespace OblivionAPI.Objects {
     public class OblivionDetails {
         public ChainID ChainID;
+        public uint ReleaseStartingBlock = 0;
+        public uint LastReleaseScannedBlock = 0;
+        
         public uint TotalListings;
         public uint TotalListingsV1;
         public uint TotalListingsV2;
@@ -20,5 +23,6 @@ namespace OblivionAPI.Objects {
         public readonly List<CollectionDetails> Collections = new();
         public readonly List<ReleaseDetails> Releases = new();
         public readonly List<NFTDetails> NFTs = new();
+        public readonly List<ReleaseSaleDetails> ReleaseSales = new();
     }
 }

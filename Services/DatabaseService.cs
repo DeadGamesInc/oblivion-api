@@ -26,8 +26,8 @@ namespace OblivionAPI.Services {
             _imageCache = imageCache;
             
             _details = new List<OblivionDetails> {
-                new() { ChainID = ChainID.BSC_Mainnet },
-                new() { ChainID = ChainID.BSC_Testnet },
+                new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 },
+                new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 },
                 new() { ChainID = ChainID.Nervos_Testnet }
             };
         }
@@ -66,6 +66,13 @@ namespace OblivionAPI.Services {
                 var details = _details.Find(a => a.ChainID == chainID);
                 var listings = details?.Listings.Where(a => a.WasSold);
                 return listings?.Select(listing => listing.SaleInformation).ToList();
+            });
+        }
+
+        public async Task<List<ReleaseSaleDetails>> GetReleaseSales(ChainID chainID) {
+            return await Task.Run(() => {
+                var details = _details.Find(a => a.ChainID == chainID);
+                return details?.ReleaseSales.ToList();
             });
         }
 
@@ -159,6 +166,7 @@ namespace OblivionAPI.Services {
                 await UpdateReleases(set);
                 await UpdateTokens(set.ChainID);
                 await UpdateSaleCollections(set);
+                await UpdateReleaseSales(set);
             }
         }
         
@@ -240,6 +248,41 @@ namespace OblivionAPI.Services {
             if (payments == null) return;
 
             foreach (var token in payments.PaymentTokens) token.Price = await _lookup.GetCurrentPrice(token.CoinGeckoKey);
+        }
+
+        private async Task UpdateReleaseSales(OblivionDetails set) {
+            if (set.ReleaseStartingBlock == 0) return;
+            if (set.LastReleaseScannedBlock == 0) set.LastReleaseScannedBlock = set.ReleaseStartingBlock - 1;
+
+            var lastBlock = await _blockchain.GetLatestBlock(set.ChainID);
+            var blocksToScan = lastBlock - set.LastReleaseScannedBlock;
+
+            while (blocksToScan > 0) {
+                var start = set.LastReleaseScannedBlock;
+                uint end;
+
+                if (blocksToScan > 5000) {
+                    end = start + 5000;
+                    blocksToScan -= 5000;
+                }
+                else {
+                    end = start + blocksToScan;
+                    blocksToScan = 0;
+                }
+
+                var sales = await _blockchain.CheckReleaseSales(set.ChainID, start, end);
+                set.LastReleaseScannedBlock = end;
+                
+                if (sales == null) return;
+                if (sales.Count == 0) continue;
+
+                foreach (var sale in sales) {
+                    var release = set.Releases.Find(a => a.ID == sale.ID);
+                    sale.Price = release?.Price;
+                    sale.PaymentToken = release?.PaymentToken;
+                    set.ReleaseSales.Add(sale);
+                }
+            }
         }
 
         private async Task<ListingDetails> RetrieveListing(ChainID chainID, int version, uint id, bool forceUpdate) {

@@ -12,6 +12,8 @@ using OblivionAPI.Objects;
 using OblivionAPI.Config;
 using OblivionAPI.Responses;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -159,6 +161,63 @@ namespace OblivionAPI.Services {
             }
         }
 
+        public async Task<List<ReleaseSaleDetails>> CheckReleaseSales(ChainID chainID, uint startBlock, uint endBlock) {
+            _logger.LogDebug("Checking release sales from block {StartBlock} to block {EndBlock} on {ChainID}", startBlock, endBlock, chainID);
+            try {
+                Thread.Sleep(Globals.THROTTLE_WAIT);
+                var sales = new List<ReleaseSaleDetails>();
+
+                var address = Contracts.OblivionMintingService.GetAddress(chainID);
+                var web3 = GetWeb3(chainID);
+
+                if (web3 == null || string.IsNullOrEmpty(address)) return null;
+                
+                var contract = web3.Eth.GetContract(ABIs.OblivionMintingService, address);
+                var start = new BlockParameter(startBlock);
+                var end = new BlockParameter(endBlock);
+
+                var singleEvent = contract.GetEvent("NftPurchased");
+                var singleFilter = singleEvent.CreateFilterInput(start, end);
+                var singleEvents = await singleEvent.GetAllChangesDefaultAsync(singleFilter);
+
+                if (singleEvents.Count > 0) {
+                    foreach (var sale in singleEvents) {
+                        var block = new BlockParameter(sale.Log.BlockNumber);
+                        var saleTime = await GetBlockTimestamp(chainID, block);
+                        var details = new ReleaseSaleDetails {
+                            ID = Convert.ToUInt32(sale.Event[0].Result.ToString()),
+                            Quantity = 1,
+                            SaleTime = saleTime
+                        };
+                        sales.Add(details);
+                    }
+                }
+
+                var multiEvent = contract.GetEvent("MultiNftPurchases");
+                var multiFilter = multiEvent.CreateFilterInput(start, end);
+                var multiEvents = await multiEvent.GetAllChangesDefaultAsync(multiFilter);
+
+                if (multiEvents.Count > 0) {
+                    foreach (var sale in multiEvents) {
+                        var block = new BlockParameter(sale.Log.BlockNumber);
+                        var saleTime = await GetBlockTimestamp(chainID, block);
+                        var details = new ReleaseSaleDetails {
+                            ID = Convert.ToUInt32(sale.Event[0].Result.ToString()),
+                            Quantity = Convert.ToInt32(sale.Event[2].Result.ToString()),
+                            SaleTime = saleTime
+                        };
+                        sales.Add(details);
+                    }
+                }
+
+                return sales;
+            }
+            catch (Exception error) {
+                _logger.LogError(error, "An exception occured while checking release sales");
+                return null;
+            }
+        }
+
         public async Task<OblivionSaleInformation> CheckSale(ChainID chainID, int version, ListingDetails listing) {
             _logger.LogDebug("Checking sale details for {ListingID} on {ChainID}:V{Version}", listing.ID, chainID, version);
             
@@ -216,6 +275,20 @@ namespace OblivionAPI.Services {
             } catch (Exception error) {
                 _logger.LogError(error, "An exception occured while getting block timestamp on {ChainID}", chainID);
                 return DateTime.MinValue;
+            }
+        }
+
+        public async Task<uint> GetLatestBlock(ChainID chainID) {
+            try {
+                var web3 = GetWeb3(chainID);
+                if (web3 == null) return 0;
+
+                var block = await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
+                return Convert.ToUInt32(block.ToString());
+            }
+            catch (Exception error) {
+                _logger.LogError(error, "An exception occured while retrieving the latest block number on {ChainID}", chainID);
+                return 0;
             }
         }
 
