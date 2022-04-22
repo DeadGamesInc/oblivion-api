@@ -12,10 +12,11 @@ using Serilog;
 using Serilog.Events;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace OblivionAPI {
     public static class Program {
-        public static void Main() {
+        public static async Task Main() {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
@@ -50,7 +51,7 @@ namespace OblivionAPI {
 
             try {
                 Log.Logger.Information("Dead Games API is starting");
-                host.Run();
+                await host.RunAsync();
             } catch (Exception error) {
                 Log.Logger.Error(error, "An exception occured in host execution");
             }
