@@ -27,7 +27,8 @@ namespace OblivionAPI.Services {
             
             _details = new List<OblivionDetails> {
                 new() { ChainID = ChainID.BSC_Mainnet },
-                new() { ChainID = ChainID.BSC_Testnet }
+                new() { ChainID = ChainID.BSC_Testnet },
+                new() { ChainID = ChainID.Nervos_Testnet }
             };
         }
         

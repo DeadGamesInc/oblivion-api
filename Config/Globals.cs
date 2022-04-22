@@ -31,7 +31,8 @@ namespace OblivionAPI.Config {
         
         public static readonly List<BlockchainDetails> Blockchains = new() {
             new() { ChainID = ChainID.BSC_Mainnet, Node = "https://bsc-dataseed.binance.org" },
-            new() { ChainID = ChainID.BSC_Testnet, Node = "https://data-seed-prebsc-1-s1.binance.org:8545" }
+            new() { ChainID = ChainID.BSC_Testnet, Node = "https://data-seed-prebsc-1-s1.binance.org:8545" },
+            new() { ChainID = ChainID.Nervos_Testnet, Node = "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev/" }
         };
 
         public static readonly List<PaymentDetails> Payments = new() {
@@ -42,6 +43,9 @@ namespace OblivionAPI.Config {
             new() { ChainID = ChainID.BSC_Testnet, PaymentTokens = new() {
                 new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "BNB", CoinGeckoKey = "binancecoin" },
                 new() { Address = "0x4c99c06cd1ec75a303b24e9e89374ebd672189ad", Symbol = "ZMBE", CoinGeckoKey = "rugzombie" }
+            }},
+            new() { ChainID = ChainID.Nervos_Testnet, PaymentTokens = new() {
+                new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "CKB", CoinGeckoKey = "nervos-network" }
             }},
         };
     }

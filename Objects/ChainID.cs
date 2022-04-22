@@ -6,8 +6,9 @@
  */
 
 namespace OblivionAPI.Objects {
-    public enum ChainID {
+    public enum ChainID : long {
         BSC_Mainnet = 56,
-        BSC_Testnet = 97
+        BSC_Testnet = 97,
+        Nervos_Testnet = 868455272153094
     }
 }
