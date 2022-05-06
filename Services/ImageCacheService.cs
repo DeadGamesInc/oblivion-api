@@ -6,8 +6,6 @@
  */
 
 using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -16,6 +14,9 @@ using Microsoft.Extensions.Logging;
 
 using OblivionAPI.Config;
 using OblivionAPI.Objects;
+
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace OblivionAPI.Services {
     public class ImageCacheService {
@@ -82,24 +83,14 @@ namespace OblivionAPI.Services {
                 var lowResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, name);
                 if (File.Exists(lowResFile)) return Globals.IMAGE_CACHE_PREFIX + name;
                 var highFile = Path.Combine(Globals.IMAGE_CACHE_DIR, highResFile);
-                await using var file = File.Open(highFile, FileMode.Open);
 
-                var reduced = Image.FromStream(file);
-                var bitmap = new Bitmap(Globals.REDUCED_IMAGE_WIDTH, Globals.REDUCED_IMAGE_HEIGHT);
-                var graphic = Graphics.FromImage(bitmap);
-
-                graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphic.SmoothingMode = SmoothingMode.HighQuality;
-                graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                graphic.CompositingQuality = CompositingQuality.HighQuality;
-                graphic.DrawImage(reduced, 0, 0, Globals.REDUCED_IMAGE_WIDTH, Globals.REDUCED_IMAGE_HEIGHT);
-
-                bitmap.Save(lowResFile);
-
-                file.Close();
-                await file.DisposeAsync();
-                bitmap.Dispose();
-
+                using var image = await Image.LoadAsync(highFile);
+                image
+                    .Mutate(a => a
+                    .Resize(Globals.REDUCED_IMAGE_WIDTH, Globals.REDUCED_IMAGE_HEIGHT));
+                await image.SaveAsPngAsync(lowResFile);
+                
+                image.Dispose();
                 return Globals.IMAGE_CACHE_PREFIX + name;
             } catch (ArgumentException error) {
                 if (error.Message == "Parameter is not valid.") 
