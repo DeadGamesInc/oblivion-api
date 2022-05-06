@@ -10,6 +10,7 @@ using OblivionAPI.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OblivionAPI.Services {
@@ -157,17 +158,20 @@ namespace OblivionAPI.Services {
         }
 
         public async Task HandleUpdate() {
-            var details = _details.ToList();
+            var tasks = new List<Task>();
+            foreach (var set in _details) tasks.Add(Task.Run(async () => await HandleChainUpdate(set)));
+            var run = Task.WhenAll(tasks);
+            await run.WaitAsync(new CancellationToken());
+        }
 
-            foreach (var set in details) {
-                await UpdateBasicDetails(set.ChainID);
-                await UpdateListings(set);
-                await UpdateCollections(set);
-                await UpdateReleases(set);
-                await UpdateTokens(set.ChainID);
-                await UpdateSaleCollections(set);
-                await UpdateReleaseSales(set);
-            }
+        private async Task HandleChainUpdate(OblivionDetails set) {
+            await UpdateBasicDetails(set.ChainID);
+            await UpdateListings(set);
+            await UpdateCollections(set);
+            await UpdateReleases(set);
+            await UpdateTokens(set.ChainID);
+            await UpdateSaleCollections(set);
+            await UpdateReleaseSales(set);
         }
         
         private async Task UpdateBasicDetails(ChainID chainID) {

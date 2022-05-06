@@ -92,8 +92,8 @@ namespace OblivionAPI.Services {
                 
                 image.Dispose();
                 return Globals.IMAGE_CACHE_PREFIX + name;
-            } catch (ArgumentException error) {
-                if (error.Message == "Parameter is not valid.") 
+            } catch (UnknownImageFormatException error) {
+                if (error.Message.Contains("Image cannot be loaded")) 
                     _logger.LogWarning("Failed to generate low res image for {HighResFile} - Likely a movie image", highResFile);
                 else _logger.LogCritical(error, "Error triggers: {Error}", error.Message);
                 return null;
