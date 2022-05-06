@@ -8,5 +8,6 @@
     {
       "ContainerPort": "5001"
     }
-  ]
+  ],
+  "Logging": "/var/log/eb-docker/containers/eb-current-app/*.log"
 }
