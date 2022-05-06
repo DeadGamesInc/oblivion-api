@@ -32,6 +32,12 @@ namespace OblivionAPI.Controllers {
         }
 
         [HttpGet]
+        [Route("initialSyncComplete")]
+        public async Task<ActionResult<bool>> InitialSyncComplete() {
+            return Ok(_database.InitialSyncComplete);
+        }
+
+        [HttpGet]
         [Route("getTotalListings")]
         public async Task<ActionResult<uint>> GetTotalListings() {
             _logger.LogInformation("getTotalListings for Chain ID {ChainID}", _chainID);

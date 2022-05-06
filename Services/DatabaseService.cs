@@ -15,6 +15,8 @@ using System.Threading.Tasks;
 
 namespace OblivionAPI.Services {
     public class DatabaseService {
+        public bool InitialSyncComplete;
+        
         private readonly BlockchainService _blockchain;
         private readonly LookupService _lookup;
         private readonly ImageCacheService _imageCache;
@@ -162,6 +164,7 @@ namespace OblivionAPI.Services {
             foreach (var set in _details) tasks.Add(Task.Run(async () => await HandleChainUpdate(set)));
             var run = Task.WhenAll(tasks);
             await run.WaitAsync(new CancellationToken());
+            InitialSyncComplete = true;
         }
 
         private async Task HandleChainUpdate(OblivionDetails set) {
