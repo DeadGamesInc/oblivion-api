@@ -328,9 +328,36 @@ namespace OblivionAPI.Controllers {
 
         [HttpGet]
         [Route("get24HourVolume")]
-        public async Task<ActionResult<SalesReport_24HVolume>> SalesReport_24HVolume() {
+        public async Task<ActionResult<SalesReport_Volume>> SalesReport_24HVolume() {
             _logger.LogInformation("get24HourVolume on {ChainID}", _chainID);
             var report = await _reports.SalesReport_24HVolume(_chainID);
+            if (report == null) return NotFound(null);
+            return Ok(report);
+        }
+        
+        [HttpGet]
+        [Route("get30DayVolume")]
+        public async Task<ActionResult<SalesReport_Volume>> SalesReport_30DVolume() {
+            _logger.LogInformation("get30DayVolume on {ChainID}", _chainID);
+            var report = await _reports.SalesReport_30DVolume(_chainID);
+            if (report == null) return NotFound(null);
+            return Ok(report);
+        }
+        
+        [HttpGet]
+        [Route("getMonthlyVolume")]
+        public async Task<ActionResult<SalesReport_Volume>> SalesReport_MonthlyVolume() {
+            _logger.LogInformation("getMonthlyVolume on {ChainID}", _chainID);
+            var report = await _reports.SalesReport_CurrentMonthVolume(_chainID);
+            if (report == null) return NotFound(null);
+            return Ok(report);
+        }
+        
+        [HttpGet]
+        [Route("getPreviousMonthlyVolume")]
+        public async Task<ActionResult<SalesReport_Volume>> SalesReport_PreviousMonthlyVolume() {
+            _logger.LogInformation("getPreviousMonthlyVolume on {ChainID}", _chainID);
+            var report = await _reports.SalesReport_PreviousMonthVolume(_chainID);
             if (report == null) return NotFound(null);
             return Ok(report);
         }

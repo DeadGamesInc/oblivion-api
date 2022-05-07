@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace OblivionAPI.Reports {
     [Serializable]
-    public class SalesReport_24HVolume {
+    public class SalesReport_Volume {
         public int TotalSales { get; set; }
         public int TotalReleaseSales { get; set; }
         public decimal TotalVolume { get; set; }
