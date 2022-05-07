@@ -38,11 +38,13 @@ namespace OblivionAPI.Config {
         public static readonly List<PaymentDetails> Payments = new() {
             new() { ChainID = ChainID.BSC_Mainnet, PaymentTokens = new() {
                 new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "BNB", CoinGeckoKey = "binancecoin" },
-                new() { Address = "0x50ba8BF9E34f0F83F96a340387d1d3888BA4B3b5", Symbol = "ZMBE", CoinGeckoKey = "rugzombie" }
+                new() { Address = "0x50ba8BF9E34f0F83F96a340387d1d3888BA4B3b5", Symbol = "ZMBE", CoinGeckoKey = "rugzombie" },
+                new() { Address = "0xe9e7cea3dedca5984780bafc599bd69add087d56", Symbol = "BUSD", CoinGeckoKey = "binance-usd" }
             }},
             new() { ChainID = ChainID.BSC_Testnet, PaymentTokens = new() {
                 new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "BNB", CoinGeckoKey = "binancecoin" },
-                new() { Address = "0x4c99c06cd1ec75a303b24e9e89374ebd672189ad", Symbol = "ZMBE", CoinGeckoKey = "rugzombie" }
+                new() { Address = "0x4c99c06cd1ec75a303b24e9e89374ebd672189ad", Symbol = "ZMBE", CoinGeckoKey = "rugzombie" },
+                new() { Address = "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee", Symbol = "BUSD", CoinGeckoKey = "binance-usd" }
             }},
             new() { ChainID = ChainID.Nervos_Testnet, PaymentTokens = new() {
                 new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "CKB", CoinGeckoKey = "nervos-network" }
