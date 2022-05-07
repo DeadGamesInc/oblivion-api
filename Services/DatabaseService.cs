@@ -160,8 +160,7 @@ namespace OblivionAPI.Services {
         }
 
         public async Task HandleUpdate() {
-            var tasks = new List<Task>();
-            foreach (var set in _details) tasks.Add(Task.Run(async () => await HandleChainUpdate(set)));
+            var tasks = _details.Select(set => Task.Run(async () => await HandleChainUpdate(set))).ToList();
             var run = Task.WhenAll(tasks);
             await run.WaitAsync(new CancellationToken());
             InitialSyncComplete = true;

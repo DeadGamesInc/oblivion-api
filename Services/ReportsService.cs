@@ -55,7 +55,7 @@ namespace OblivionAPI.Services {
                     collectionVolume += await ConvertTokensToUSD(tokenVolume, token.Decimals, token.CoinGeckoKey);
                 }
                 
-                report.Collections.Add(new SalesReport_CollectionVolume(collection.ID, collectionVolume));
+                report.Collections.Add(new SalesReport_CollectionVolume(collection.ID, collectionVolume, collection.Name, collection.Image));
             }
 
             var releaseSales = await _database.GetReleaseSales(chainID);

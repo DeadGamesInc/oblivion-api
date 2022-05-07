@@ -1,4 +1,7 @@
-﻿namespace OblivionAPI.Reports {
+﻿using System;
+
+namespace OblivionAPI.Reports {
+    [Serializable]
     public class SalesReport_ReleaseVolume {
         public uint ID { get; set; }
         public decimal Volume { get; set; }

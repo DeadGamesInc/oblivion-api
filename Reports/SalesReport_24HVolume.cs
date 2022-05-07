@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace OblivionAPI.Reports {
+    [Serializable]
     public class SalesReport_24HVolume {
         public int TotalSales { get; set; }
         public int TotalReleaseSales { get; set; }

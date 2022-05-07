@@ -323,8 +323,15 @@ namespace OblivionAPI.Services {
 
                 var nftsFunction = contract.GetFunction("collectionNfts");
                 var nfts = await nftsFunction.CallAsync<CollectionNFTsResponse>(id);
+
+                var metaDataFunction = contract.GetFunction("getMetadata");
+
+                var name = await metaDataFunction.CallAsync<string>(id, "name");
+                var image = await metaDataFunction.CallAsync<string>(id, "image");
+                var description = await metaDataFunction.CallAsync<string>(id, "description");
+                var banner = await metaDataFunction.CallAsync<string>(id, "banner");
                 
-                var collection = new CollectionDetails(id, result, nfts.NFTs.ToArray());
+                var collection = new CollectionDetails(id, result, name, image, description, banner, nfts.NFTs.ToArray());
                 
                 return collection;
             } catch (Exception error) {
