@@ -16,6 +16,7 @@ namespace OblivionAPI.Config {
         public static uint CACHE_TIME = 2;
         public static uint REFRESH_TIME = 300000;
         public static int THROTTLE_WAIT = 500;
+        public static int COIN_GECKO_THROTTLE_WAIT = 1500;
 
         public static int REDUCED_IMAGE_WIDTH = 100;
         public static int REDUCED_IMAGE_HEIGHT = 100;

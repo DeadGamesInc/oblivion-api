@@ -130,10 +130,12 @@ namespace OblivionAPI.Services {
 
             foreach (var token in payments.PaymentTokens) {
                 var tokenSales = salesPeriod.Where(a => a.PaymentToken == token.Address);
-                var tokenVolume = new BigInteger();
-                tokenVolume = tokenSales.Aggregate(tokenVolume,
-                    (current, sale) => BigInteger.Add(current, BigInteger.Parse(sale.Amount)));
-                totalVolume += await ConvertTokensToUSD(tokenVolume, token.Decimals, token.CoinGeckoKey);
+                decimal tokenVolume = 0;
+                foreach (var sale in tokenSales) {
+                    tokenVolume += await ConvertTokensToUSD(BigInteger.Parse(sale.Amount), token.Decimals, token.CoinGeckoKey,
+                        sale.SaleDate);
+                }
+                totalVolume += tokenVolume;
             }
 
             report.TotalVolume = totalVolume;
@@ -146,12 +148,12 @@ namespace OblivionAPI.Services {
 
                 foreach (var token in payments.PaymentTokens) {
                     var tokenSales = collectionSales.Where(a => a.PaymentToken == token.Address);
-
-                    var tokenVolume = new BigInteger();
-                    tokenVolume = tokenSales.Aggregate(tokenVolume,
-                        (current, sale) => BigInteger.Add(current, BigInteger.Parse(sale.Amount)));
-
-                    collectionVolume += await ConvertTokensToUSD(tokenVolume, token.Decimals, token.CoinGeckoKey);
+                    decimal tokenVolume = 0;
+                    foreach (var sale in tokenSales) {
+                        tokenVolume += await ConvertTokensToUSD(BigInteger.Parse(sale.Amount), token.Decimals, token.CoinGeckoKey,
+                            sale.SaleDate);
+                    }
+                    collectionVolume += tokenVolume;
                 }
 
                 report.Collections.Add(new SalesReport_CollectionVolume(collection.ID, collectionVolume, collection.Name,
@@ -168,10 +170,12 @@ namespace OblivionAPI.Services {
 
             foreach (var token in payments.PaymentTokens) {
                 var tokenSales = releaseSalesPeriod.Where(a => a.PaymentToken == token.Address);
-                var tokenVolume = new BigInteger();
-                tokenVolume = tokenSales.Select(sale => BigInteger.Parse(sale.Price) * sale.Quantity)
-                    .Aggregate(tokenVolume, (current, amount) => current + amount);
-                totalReleaseVolume += await ConvertTokensToUSD(tokenVolume, token.Decimals, token.CoinGeckoKey);
+                decimal tokenVolume = 0;
+                foreach (var sale in tokenSales) {
+                    tokenVolume += await ConvertTokensToUSD(BigInteger.Parse(sale.Price) * sale.Quantity, token.Decimals, token.CoinGeckoKey,
+                        sale.SaleTime);
+                }
+                totalReleaseVolume += tokenVolume;
             }
 
             report.TotalReleaseVolume = totalReleaseVolume;
@@ -184,12 +188,12 @@ namespace OblivionAPI.Services {
 
                 foreach (var token in payments.PaymentTokens) {
                     var tokenSales = releaseSalesCheck.Where(a => a.PaymentToken == token.Address);
-
-                    var tokenVolume = new BigInteger();
-                    tokenVolume = tokenSales.Select(sale => BigInteger.Parse(sale.Price) * sale.Quantity)
-                        .Aggregate(tokenVolume, (current, amount) => current + amount);
-
-                    releaseVolume += await ConvertTokensToUSD(tokenVolume, token.Decimals, token.CoinGeckoKey);
+                    decimal tokenVolume = 0;
+                    foreach (var sale in tokenSales) {
+                        tokenVolume += await ConvertTokensToUSD(BigInteger.Parse(sale.Price) * sale.Quantity, token.Decimals, token.CoinGeckoKey,
+                            sale.SaleTime);
+                    }
+                    releaseVolume += tokenVolume;
                 }
 
                 report.Releases.Add(new SalesReport_ReleaseVolume(release.ID, releaseVolume));
@@ -198,11 +202,13 @@ namespace OblivionAPI.Services {
             return report;
         }
 
-        private async Task<decimal> ConvertTokensToUSD(BigInteger tokens, int decimals, string coinGeckoKey) {
+        private async Task<decimal> ConvertTokensToUSD(BigInteger tokens, int decimals, string coinGeckoKey, DateTime? date = null) {
             var ratio = BigInteger.Pow(10, decimals);
 
             var tokenAmount = (double)tokens / (double)ratio;
-            var price = await _lookup.GetCurrentPrice(coinGeckoKey);
+            decimal price;
+            if (date == null) price = await _lookup.GetCurrentPrice(coinGeckoKey);
+            else price = await _lookup.GetHistoricalPrice(coinGeckoKey, date);
 
             return (decimal)tokenAmount * price;
         }

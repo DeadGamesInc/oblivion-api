@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OblivionAPI.Services {
@@ -23,6 +24,7 @@ namespace OblivionAPI.Services {
         private readonly ICoinGeckoClient _coinGecko;
 
         private readonly List<CachedPrice> _prices = new();
+        private readonly List<HistoricalPrice> _priceHistory = new();
 
         public LookupService(ILogger<LookupService> logger, IHttpClientFactory httpFactory) {
             _logger = logger;
@@ -74,11 +76,23 @@ namespace OblivionAPI.Services {
         }
 
         // Date is in format DD-MM-YYYY
-        public async Task<decimal> GetHistoricalPrice(string id, string date) {
+        public async Task<decimal> GetHistoricalPrice(string id, DateTime? dateTime) {
             try {
+                if (dateTime == null) return 0;
+                var date = dateTime?.ToString("dd-MM-yyyy");
+
+                var check = _priceHistory.Find(a => a.CoinGeckoKey == id && a.PriceDate == date);
+                if (check != null) return check.Price;
+
+                Thread.Sleep(Globals.COIN_GECKO_THROTTLE_WAIT);
                 _logger.LogInformation("Looking up price for {ID} on {Date}", id, date);
+                
                 var result = await _coinGecko.CoinsClient.GetHistoryByCoinId(id, date, "false");
-                return result.MarketData.CurrentPrice["usd"] ?? 0;
+
+                var price = new HistoricalPrice { CoinGeckoKey = id, Price = result.MarketData.CurrentPrice["usd"] ?? 0, PriceDate = date };
+                _priceHistory.Add(price);
+                
+                return price.Price;
             } catch (Exception error) {
                 _logger.LogError(error, "An exception occured while retrieving historical price for {ID}", id);
                 return 0;
