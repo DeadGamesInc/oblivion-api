@@ -1,6 +1,7 @@
 ﻿using System;
 
 namespace OblivionAPI.Reports {
+    [Serializable]
     public class ReleaseCollection {
         public string Name { get; set; }
         public string Image { get; set; }
