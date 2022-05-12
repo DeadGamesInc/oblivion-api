@@ -108,7 +108,7 @@ namespace OblivionAPI.Services {
                 }
 
                 var collection = collections.Find(c => c.Nfts.Contains(release.NFT));
-                var releaseCollection = collection is null ? null : new ReleaseCollection(collection.Name, collection.Image);
+                var releaseCollection = collection is null ? null : new ReleaseCollection(collection.ID, collection.Name, collection.Image);
 
                 report.Releases.Add(new SalesReport_ReleaseVolume(release.ID, releaseVolume, releaseCollection));
             }
@@ -200,7 +200,7 @@ namespace OblivionAPI.Services {
                 }
 
                 var collection = collections.Find(c => c.Nfts.Contains(release.NFT));
-                var releaseCollection = collection is null ? null : new ReleaseCollection(collection.Name, collection.Image);
+                var releaseCollection = collection is null ? null : new ReleaseCollection(collection.ID, collection.Name, collection.Image);
                 
                 report.Releases.Add(new SalesReport_ReleaseVolume(release.ID, releaseVolume, releaseCollection));
             }
