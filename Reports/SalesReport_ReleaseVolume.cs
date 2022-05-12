@@ -3,10 +3,12 @@
 namespace OblivionAPI.Reports {
     [Serializable]
     public class ReleaseCollection {
+        public uint ID { get; set; }
         public string Name { get; set; }
         public string Image { get; set; }
         
-        public ReleaseCollection(string name, string image) {
+        public ReleaseCollection(uint id, string name, string image) {
+            ID = id;
             Name = name;
             Image = image;
         }
