@@ -107,7 +107,10 @@ namespace OblivionAPI.Services {
                     releaseVolume += await ConvertTokensToUSD(tokenVolume, token.Decimals, token.CoinGeckoKey);
                 }
 
-                report.Releases.Add(new SalesReport_ReleaseVolume(release.ID, releaseVolume));
+                var collection = collections.Find(c => c.Nfts.Contains(release.NFT));
+                var releaseCollection = collection is null ? null : new ReleaseCollection(collection.Name, collection.Image);
+
+                report.Releases.Add(new SalesReport_ReleaseVolume(release.ID, releaseVolume, releaseCollection));
             }
 
             return report;
@@ -196,7 +199,10 @@ namespace OblivionAPI.Services {
                     releaseVolume += tokenVolume;
                 }
 
-                report.Releases.Add(new SalesReport_ReleaseVolume(release.ID, releaseVolume));
+                var collection = collections.Find(c => c.Nfts.Contains(release.NFT));
+                var releaseCollection = collection is null ? null : new ReleaseCollection(collection.Name, collection.Image);
+                
+                report.Releases.Add(new SalesReport_ReleaseVolume(release.ID, releaseVolume, releaseCollection));
             }
 
             return report;
