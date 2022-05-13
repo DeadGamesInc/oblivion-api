@@ -28,6 +28,7 @@ namespace OblivionAPI.Objects {
         public uint PaymentMethod { get; set; }
         public uint SaleType { get; set; }
         public uint SaleState { get; set; }
+        public OfferDetails? TopOffer { get; set; }
 
         public bool Finalized;
         public bool WasSold { get; set; }

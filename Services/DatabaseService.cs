@@ -10,6 +10,7 @@ using OblivionAPI.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,7 +28,7 @@ namespace OblivionAPI.Services {
             _blockchain = blockchain;
             _lookup = lookup;
             _imageCache = imageCache;
-            
+
             _details = new List<OblivionDetails> {
                 new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 },
                 new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 },
@@ -199,15 +200,34 @@ namespace OblivionAPI.Services {
                 
                 var payments = Globals.Payments.Find(a => a.ChainID == set.ChainID);
                 if (payments == null) continue;
+
+                decimal topOfferValue = 0;
+                OfferDetails topOffer = null;
                 
                 foreach (var token in payments.PaymentTokens) {
-                    foreach (var offer in listing.Offers.Where(a => a.PaymentToken == token.Address && !a.Claimed)) 
-                        await RetrieveOffer(set.ChainID, listing.Version, listing.ID, token.Address, offer.ID, true);
+                    foreach (var offer in listing.Offers.Where(a => a.PaymentToken == token.Address && !a.Claimed)) {
+                        var check = await RetrieveOffer(set.ChainID, listing.Version, listing.ID, token.Address, offer.ID, true);
+                        if (check.Claimed && listing.SaleState == 0) continue;
+                        var value = await ConvertTokensToUSD(BigInteger.Parse(check.Amount), token.Decimals, token.CoinGeckoKey);
+                        if (value > topOfferValue) {
+                            topOffer = check;
+                            topOfferValue = value;
+                        }
+                    }
                     
                     var total = await _blockchain.GetListingOffers(set.ChainID, listing.Version, listing.ID, token.Address);
-                    for (var id = listing.Offers.Count(a => a.PaymentToken == token.Address); id < total; id++)
-                        await RetrieveOffer(set.ChainID, listing.Version, listing.ID, token.Address, Convert.ToUInt32(id), true);
+                    for (var id = listing.Offers.Count(a => a.PaymentToken == token.Address); id < total; id++) {
+                        var check = await RetrieveOffer(set.ChainID, listing.Version, listing.ID, token.Address, Convert.ToUInt32(id), true);
+                        if (check.Claimed && listing.SaleState == 0) continue;
+                        var value = await ConvertTokensToUSD(BigInteger.Parse(check.Amount), token.Decimals, token.CoinGeckoKey);
+                        if (value > topOfferValue) {
+                            topOffer = check;
+                            topOfferValue = value;
+                        }
+                    }
                 }
+
+                listing.TopOffer = topOffer;
             }
             
             foreach (var listing in set.Listings.Where(a => !a.Finalized && a.SaleState != 0)) await FinalizeListing(set.ChainID, listing.Version, listing);
@@ -434,6 +454,17 @@ namespace OblivionAPI.Services {
             }
 
             return release;
+        }
+        
+        private async Task<decimal> ConvertTokensToUSD(BigInteger tokens, int decimals, string coinGeckoKey, DateTime? date = null) {
+            var ratio = BigInteger.Pow(10, decimals);
+
+            var tokenAmount = (double)tokens / (double)ratio;
+            decimal price;
+            if (date == null) price = await _lookup.GetCurrentPrice(coinGeckoKey);
+            else price = await _lookup.GetHistoricalPrice(coinGeckoKey, date);
+
+            return (decimal)tokenAmount * price;
         }
     }
 }
