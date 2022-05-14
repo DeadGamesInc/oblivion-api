@@ -190,6 +190,15 @@ namespace OblivionAPI.Controllers {
         }
 
         [HttpGet]
+        [Route("getNfts")]
+        public async Task<ActionResult<NFTDetails[]>> GetNFTs() {
+            _logger.LogInformation("getNfts on {ChainID}", _chainID);
+            var nfts = await _database.GetNFTs(_chainID);
+            if (nfts == null) return NotFound(null);
+            return Ok(nfts.ToArray());
+        }
+
+        [HttpGet]
         [Route("getNft/{address}")]
         public async Task<ActionResult<NFTDetails>> GetNFT(string address) {
             _logger.LogInformation("getNft for {Address} on {ChainID}", address, _chainID);

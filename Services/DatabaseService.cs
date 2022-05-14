@@ -87,6 +87,13 @@ namespace OblivionAPI.Services {
             });
         }
 
+        public async Task<List<NFTDetails>> GetNFTs(ChainID chainID) {
+            return await Task.Run(() => {
+                var details = _details.Find(a => a.ChainID == chainID);
+                return details?.NFTs.ToList();
+            });
+        }
+
         public async Task<List<OfferDetails>> GetOffers(ChainID chainID, uint id, int version) {
             return await Task.Run(() => {
                 var details = _details.Find(a => a.ChainID == chainID);
