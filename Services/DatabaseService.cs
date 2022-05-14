@@ -80,10 +80,10 @@ namespace OblivionAPI.Services {
             });
         }
 
-        public async Task<List<ListingDetails>> GetListings(ChainID chainID) {
+        public async Task<List<ListListingsDTO>> GetListings(ChainID chainID) {
             return await Task.Run(() => {
                 var details = _details.Find(a => a.ChainID == chainID);
-                return details?.Listings.ToList();
+                return details == null ? null : (from listing in details.Listings let nft = details.NFTs.Find(a => a.Address == listing.NFT) select new ListListingsDTO(listing, nft)).ToList();
             });
         }
 

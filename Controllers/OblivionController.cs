@@ -48,7 +48,7 @@ namespace OblivionAPI.Controllers {
         
         [HttpGet]
         [Route("getListings")]
-        public async Task<ActionResult<ListingDetails[]>> GetListings() {
+        public async Task<ActionResult<ListListingsDTO[]>> GetListings() {
             _logger.LogInformation("getListings on {ChainID}", _chainID);
             var listings = await _database.GetListings(_chainID);
             if (listings == null) return NotFound(null);
@@ -57,7 +57,7 @@ namespace OblivionAPI.Controllers {
 
         [HttpGet]
         [Route("getOpenListings")]
-        public async Task<ActionResult<ListingDetails[]>> GetOpenListings() {
+        public async Task<ActionResult<ListListingsDTO[]>> GetOpenListings() {
             _logger.LogInformation("getOpenListings on {ChainID}", _chainID);
             var listings = await _database.GetListings(_chainID);
             if (listings == null) return NotFound(null);
@@ -67,7 +67,7 @@ namespace OblivionAPI.Controllers {
 
         [HttpGet]
         [Route("getClosedListings")]
-        public async Task<ActionResult<ListingDetails[]>> GetClosedListings() {
+        public async Task<ActionResult<ListListingsDTO[]>> GetClosedListings() {
             _logger.LogInformation("getClosedListings on {ChainID}", _chainID);
             var listings = await _database.GetListings(_chainID);
             if (listings == null) return NotFound(null);
@@ -77,7 +77,7 @@ namespace OblivionAPI.Controllers {
 
         [HttpGet]
         [Route("getSoldListings")]
-        public async Task<ActionResult<ListingDetails[]>> GetSoldListings() {
+        public async Task<ActionResult<ListListingsDTO[]>> GetSoldListings() {
             _logger.LogInformation("getSoldListings on {ChainID}", _chainID);
             var listings = await _database.GetListings(_chainID);
             if (listings == null) return NotFound(null);
@@ -87,7 +87,7 @@ namespace OblivionAPI.Controllers {
 
         [HttpGet]
         [Route("getListingsByNft/{nft}")]
-        public async Task<ActionResult<ListingDetails[]>> GetListingsByNft(string nft) {
+        public async Task<ActionResult<ListListingsDTO[]>> GetListingsByNft(string nft) {
             _logger.LogInformation("getListingsByNft for {Nft} on {ChainID}", nft, _chainID);
             var listings = await _database.GetListings(_chainID);
             if (listings == null) return NotFound(null);
@@ -97,7 +97,7 @@ namespace OblivionAPI.Controllers {
 
         [HttpGet]
         [Route("getOpenListingsByNft/{nft}")]
-        public async Task<ActionResult<ListingDetails[]>> GetOpenListingsByNft(string nft) {
+        public async Task<ActionResult<ListListingsDTO[]>> GetOpenListingsByNft(string nft) {
             _logger.LogInformation("getOpenListingsByNft for {Nft} on {ChainID}", nft, _chainID);
             var listings = await _database.GetListings(_chainID);
             if (listings == null) return NotFound(null);
@@ -107,7 +107,7 @@ namespace OblivionAPI.Controllers {
 
         [HttpGet]
         [Route("getUserListings/{wallet}")]
-        public async Task<ActionResult<ListingDetails[]>> GetUserListings(string wallet) {
+        public async Task<ActionResult<ListListingsDTO[]>> GetUserListings(string wallet) {
             _logger.LogInformation("getUserListings for {Wallet} on {ChainID}", wallet, _chainID);
             var listings = await _database.GetListings(_chainID);
             if (listings == null) return NotFound(null);
@@ -117,17 +117,17 @@ namespace OblivionAPI.Controllers {
 
         [HttpGet]
         [Route("getUserListingsWithOpenOffers/{wallet}")]
-        public async Task<ActionResult<ListingDetails[]>> GetUserListingWithOpenOffers(string wallet) {
+        public async Task<ActionResult<ListListingsDTO[]>> GetUserListingWithOpenOffers(string wallet) {
             _logger.LogInformation("getUserListingsWithOpenOffers for {Wallet} on {ChainID}", wallet, _chainID);
             var listings = await _database.GetListings(_chainID);
             if (listings == null) return NotFound(null);
-            var list = listings.Where(a => a.Owner == wallet && a.SaleState == 0 && a.Offers.Any(b => !b.Claimed));
+            var list = listings.Where(a => a.Owner == wallet && a.SaleState == 0 && a.OpenOffers > 0);
             return Ok(list.ToArray());
         }
 
         [HttpGet]
         [Route("getUserOpenListings/{wallet}")]
-        public async Task<ActionResult<ListingDetails[]>> GetUserOpenListings(string wallet) {
+        public async Task<ActionResult<ListListingsDTO[]>> GetUserOpenListings(string wallet) {
             _logger.LogInformation("getUserOpenListings for {Wallet} on {ChainID}", wallet, _chainID);
             var listings = await _database.GetListings(_chainID);
             if (listings == null) return NotFound(null);
