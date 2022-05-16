@@ -18,7 +18,7 @@ namespace OblivionAPI {
     public static class Program {
         public static async Task Main() {
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
+                .MinimumLevel.Information()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
                 .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
                 .WriteTo.Console()

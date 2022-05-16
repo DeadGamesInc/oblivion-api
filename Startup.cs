@@ -8,6 +8,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using OblivionAPI.Config;
@@ -44,7 +45,11 @@ namespace OblivionAPI {
             app.UseRouting();
             app.UseCors("Everyone");
             app.UseAuthorization();
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
+                endpoints.MapGet("/", async context => await context.Response.WriteAsync("ALIVE"));
+            });
         }
     }
 }
