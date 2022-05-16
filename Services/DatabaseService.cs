@@ -35,16 +35,6 @@ namespace OblivionAPI.Services {
                 new() { ChainID = ChainID.Nervos_Testnet }
             };
         }
-
-        public async Task RebuildImageCache(ChainID chainID) {
-            var details = _details.Find(a => a.ChainID == chainID);
-            if (details == null) return;
-            
-            details.NFTs.Clear();
-            foreach (var listing in details.Listings) {
-                
-            }
-        }
         
         public async Task<uint> TotalListings(ChainID chainID) {
             return await Task.Run(() => {
