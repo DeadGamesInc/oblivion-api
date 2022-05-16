@@ -28,8 +28,8 @@ namespace OblivionAPI.Services {
             _httpFactory = httpFactory;
         }
 
-        public async Task<ImageCacheDetails> ImageCache(ChainID chainID, string nft, string uri, bool clearExisting) {
-            if (clearExisting) ClearCachedImages(nft);
+        public async Task<ImageCacheDetails> ImageCache(ChainID chainID, string nft, string uri, uint id, bool clearExisting) {
+            if (clearExisting) ClearCachedImages(nft, id);
             var details = new ImageCacheDetails();
 
             try {
@@ -37,13 +37,13 @@ namespace OblivionAPI.Services {
                 
                 uri = uri.Replace(Globals.IPFS_RAW_PREFIX, Globals.IPFS_HTTP_PREFIX);
 
-                var highResFile = $"{nft}_high";
-                var lowResFile = $"{nft}_low";
+                var highResFile = $"{nft}_{id}_high";
+                //var lowResFile = $"{nft}_{id}_low";
 
                 details.HighResImage = await GetHighRes(uri, highResFile);
 
-                if (!string.IsNullOrEmpty(details.HighResImage))
-                    details.LowResImage = await ConvertLowRes(highResFile, lowResFile);
+                //if (!string.IsNullOrEmpty(details.HighResImage))
+                //    details.LowResImage = await ConvertLowRes(highResFile, lowResFile);
                 
                 return details;
             } catch (Exception error) {
@@ -53,11 +53,10 @@ namespace OblivionAPI.Services {
         }
 
         private async Task<string> GetHighRes(string uri, string file) {
-            _logger.LogDebug("Getting high res image from {Uri}", uri);
-            
             try {
                 var highResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, file);
                 if (File.Exists(highResFile)) return Globals.IMAGE_CACHE_PREFIX + file;
+                _logger.LogDebug("Getting high res image from {Uri}", uri);
                 var client = _httpFactory.CreateClient();
                 var response = await client.GetAsync(uri);
                 var content = await response.Content.ReadAsStreamAsync();
@@ -87,6 +86,7 @@ namespace OblivionAPI.Services {
                 using var image = await Image.LoadAsync(highFile);
                 image
                     .Mutate(a => a
+                        
                     .Resize(Globals.REDUCED_IMAGE_WIDTH, Globals.REDUCED_IMAGE_HEIGHT));
                 await image.SaveAsPngAsync(lowResFile);
                 
@@ -103,9 +103,9 @@ namespace OblivionAPI.Services {
             }
         }
         
-        private static void ClearCachedImages(string nft) {
-            var highResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_high");
-            var lowResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_low");
+        private static void ClearCachedImages(string nft, uint id) {
+            var highResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_high");
+            var lowResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_low");
             
             if (File.Exists(highResFile)) File.Delete(highResFile);
             if (File.Exists(lowResFile)) File.Delete(lowResFile);

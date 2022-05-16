@@ -18,7 +18,7 @@ namespace OblivionAPI.Config {
         public static int THROTTLE_WAIT = 500;
         public static int COIN_GECKO_THROTTLE_WAIT = 1500;
 
-        public static int REDUCED_IMAGE_WIDTH = 350;
+        public static int REDUCED_IMAGE_WIDTH = 300;
         public static int REDUCED_IMAGE_HEIGHT = 240;
 
         public static string IMAGE_CACHE_PREFIX = "https://api.oblivion.art/image-cache/";

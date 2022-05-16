@@ -19,7 +19,7 @@ public class ListListingsDTO {
     public string TopOfferToken { get; set; }
     public string TopOfferAmount { get; set; }
     public string NftName { get; set; }
-    public string NftCacheLowRes { get; set; }
+    public string NftCacheHighRes { get; set; }
     public bool WasSold;
     public string Owner;
     public int OpenOffers;
@@ -42,6 +42,7 @@ public class ListListingsDTO {
         TopOfferAmount = listing.TopOffer?.Amount;
         TopOfferToken = listing.TopOffer?.PaymentToken;
         NftName = nft?.Name;
-        NftCacheLowRes = nft?.CacheLowRes;
+        var token = nft?.TokenDetails.Find(a => a.TokenId == listing.TokenId);
+        NftCacheHighRes = token?.CacheHighRes;
     }
 }

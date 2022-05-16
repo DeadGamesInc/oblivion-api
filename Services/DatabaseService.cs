@@ -31,9 +31,19 @@ namespace OblivionAPI.Services {
 
             _details = new List<OblivionDetails> {
                 new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 },
-                new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 },
-                new() { ChainID = ChainID.Nervos_Testnet }
+                //new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 },
+                //new() { ChainID = ChainID.Nervos_Testnet }
             };
+        }
+
+        public async Task RebuildImageCache(ChainID chainID) {
+            var details = _details.Find(a => a.ChainID == chainID);
+            if (details == null) return;
+            
+            details.NFTs.Clear();
+            foreach (var listing in details.Listings) {
+                
+            }
         }
         
         public async Task<uint> TotalListings(ChainID chainID) {
@@ -140,7 +150,7 @@ namespace OblivionAPI.Services {
         }
 
         public async Task<NFTTokenIDInfo> NFTTokenURI(ChainID chainID, string address, uint tokenID) {
-            return await RetrieveNFTTokenURI(chainID, address, tokenID);
+            return await RetrieveNFTTokenURI(chainID, address, tokenID, false);
         }
 
         public async Task<ReleaseDetails> ReleaseDetails(ChainID chainID, uint id) {
@@ -202,9 +212,13 @@ namespace OblivionAPI.Services {
             for (var id = set.Listings.Count(a => a.Version == 2); id < set.TotalListingsV2; id++) await RetrieveListing(set.ChainID, 2, Convert.ToUInt32(id), true);
 
             foreach (var listing in set.Listings.Where(a => !a.Finalized)) {
-                var checkNft = set.NFTs.Find(a => a.Address == listing.NFT);
-                if (checkNft == null) await RetrieveNFT(set.ChainID, listing.NFT, false);
-                
+                var checkNft = set.NFTs.Find(a => a.Address == listing.NFT) ?? await RetrieveNFT(set.ChainID, listing.NFT, false);
+
+                if (checkNft != null) {
+                    var checkToken = checkNft.TokenDetails.Find(a => a.TokenId == listing.TokenId);
+                    if (checkToken == null) await RetrieveNFTTokenURI(set.ChainID, listing.NFT, listing.TokenId, false);
+                }
+
                 var payments = Globals.Payments.Find(a => a.ChainID == set.ChainID);
                 if (payments == null) continue;
 
@@ -402,18 +416,17 @@ namespace OblivionAPI.Services {
                 var metadata = await _lookup.GetNFTMetadata(nft.URI);
                 if (metadata != null || forceUpdate) {
                     nft.Metadata = new NFTMetadata(metadata);
-                    var cache = await _imageCache.ImageCache(chainID, address, nft.Metadata.Image, forceUpdate);
+                    var cache = await _imageCache.ImageCache(chainID, address, nft.Metadata.Image, 1, false);
                     nft.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
-                    if (!string.IsNullOrEmpty(cache.LowResImage)) nft.CacheLowRes = cache.LowResImage;
-                    else nft.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
+                    //if (!string.IsNullOrEmpty(cache.LowResImage)) nft.CacheLowRes = cache.LowResImage;
+                    //else nft.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
                 }
             }
-
 
             return nft;
         }
         
-        private async Task<NFTTokenIDInfo> RetrieveNFTTokenURI(ChainID chainID, string address, uint tokenID) {
+        private async Task<NFTTokenIDInfo> RetrieveNFTTokenURI(ChainID chainID, string address, uint tokenID, bool forceUpdate) {
             var details = _details.Find(a => a.ChainID == chainID);
             if (details == null) return null;
 
@@ -435,7 +448,18 @@ namespace OblivionAPI.Services {
 
             if (token is { Metadata: null }) {
                 var metadata = await _lookup.GetNFTMetadata(token.URI);
-                if (metadata != null) token.Metadata = new NFTMetadata(metadata);
+                if (metadata != null || forceUpdate) {
+                    token.Metadata = new NFTMetadata(metadata);
+                    if (nft.Metadata?.Image != token.Metadata?.Image && token.Metadata != null) {
+                        var cache = await _imageCache.ImageCache(chainID, address, token.Metadata.Image, token.TokenId, false);
+                        token.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
+                        //if (!string.IsNullOrEmpty(cache.LowResImage)) token.CacheLowRes = cache.LowResImage;
+                        //else token.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
+                    } else {
+                        //token.CacheLowRes = nft.CacheLowRes;
+                        token.CacheHighRes = nft.CacheHighRes;
+                    }
+                }
             }
 
             return token;
@@ -473,5 +497,7 @@ namespace OblivionAPI.Services {
 
             return (decimal)tokenAmount * price;
         }
+        
+        
     }
 }
