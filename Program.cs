@@ -22,6 +22,7 @@ namespace OblivionAPI {
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
                 .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
                 .WriteTo.Console()
+                .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "api.log"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 10)
                 .CreateLogger();
 
             Globals.LISTEN_PORT = Environment.GetEnvironmentVariable("PORT") ?? "5001";
