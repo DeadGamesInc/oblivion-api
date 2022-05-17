@@ -197,6 +197,20 @@ namespace OblivionAPI.Controllers {
             if (nfts == null) return NotFound(null);
             return Ok(nfts.ToArray());
         }
+        
+        [HttpPost]
+        [Route("getNftsByAddress")]
+        public async Task<ActionResult<NFTDetails[]>> GetNFTSByAddress([FromBody] string[] addresses) {
+            _logger.LogInformation("getNftsByAddress on {ChainID}", _chainID);
+            var nfts = new List<NFTDetails>();
+        
+            foreach (var address in addresses) {
+                var nft = await _database.NFTDetails(_chainID, address);
+                if (nft != null) nfts.Add(nft);
+            }
+            
+            return Ok(nfts.ToArray());
+        }
 
         [HttpGet]
         [Route("getNft/{address}")]
