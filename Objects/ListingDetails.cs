@@ -29,10 +29,11 @@ namespace OblivionAPI.Objects {
         public uint SaleType { get; set; }
         public uint SaleState { get; set; }
         public OfferDetails? TopOffer { get; set; }
+        public string TxHash { get; set; }
 
         public bool Finalized;
         public bool WasSold { get; set; }
-        public OblivionSaleInformation SaleInformation;
+        public OblivionSaleInformation SaleInformation { get; set; }
 
         public List<OfferDetails> Offers = new();
         

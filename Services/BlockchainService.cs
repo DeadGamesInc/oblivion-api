@@ -239,8 +239,8 @@ namespace OblivionAPI.Services {
 
                 if (buyEvents.Count > 0) {
                     var sale = new OblivionSaleInformation {
-                        ID = listing.ID, Amount = buyEvents[0].Event[3].Result.ToString(), Buyer = buyEvents[0].Event[1].Result.ToString(),
-                        Seller = listing.Owner, PaymentToken = buyEvents[0].Event[2].Result.ToString(), CreateDate = await GetBlockTimestamp(chainID, createBlock), SaleDate = await GetBlockTimestamp(chainID, block)
+                        ID = listing.ID, Version = version, Amount = buyEvents[0].Event[3].Result.ToString(), Buyer = buyEvents[0].Event[1].Result.ToString(),
+                        Seller = listing.Owner, PaymentToken = buyEvents[0].Event[2].Result.ToString(), CreateDate = await GetBlockTimestamp(chainID, createBlock), SaleDate = await GetBlockTimestamp(chainID, block), TxHash = buyEvents[0].Log.TransactionHash
                     };
                     return sale;
                 }
@@ -251,8 +251,19 @@ namespace OblivionAPI.Services {
 
                 if (offerEvents.Count > 0) {
                     var sale = new OblivionSaleInformation {
-                        ID = listing.ID, Amount = offerEvents[0].Event[4].Result.ToString(), Buyer = offerEvents[0].Event[2].Result.ToString(),
-                        Seller = listing.Owner, PaymentToken = offerEvents[0].Event[1].Result.ToString(), CreateDate = await GetBlockTimestamp(chainID, createBlock), SaleDate = await GetBlockTimestamp(chainID, block)
+                        ID = listing.ID, Version = version, Amount = offerEvents[0].Event[4].Result.ToString(), Buyer = offerEvents[0].Event[2].Result.ToString(),
+                        Seller = listing.Owner, PaymentToken = offerEvents[0].Event[1].Result.ToString(), CreateDate = await GetBlockTimestamp(chainID, createBlock), SaleDate = await GetBlockTimestamp(chainID, block), TxHash = offerEvents[0].Log.TransactionHash
+                    };
+                    return sale;
+                }
+
+                var cancelEvent = contract.GetEvent("CancelListing");
+                var cancelFilter = cancelEvent.CreateFilterInput(block, block);
+                var cancelEvents = await cancelEvent.GetAllChangesDefaultAsync(cancelFilter);
+
+                if (cancelEvents.Count > 0) {
+                    var sale = new OblivionSaleInformation {
+                        ID = listing.ID, Cancelled = true, TxHash = cancelEvents[0].Log.TransactionHash
                     };
                     return sale;
                 }

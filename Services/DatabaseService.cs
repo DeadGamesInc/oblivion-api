@@ -260,9 +260,11 @@ namespace OblivionAPI.Services {
         }
 
         private async Task FinalizeListing(ChainID chainID, int version, ListingDetails listing) {
-            listing.Finalized = true;
             var sale = await _blockchain.CheckSale(chainID, version, listing);
-            if (sale != null) {
+            if (sale == null) return;
+            listing.Finalized = true;
+            listing.TxHash = sale.TxHash;
+            if (!sale.Cancelled) {
                 sale.Nft = listing.NFT;
                 listing.WasSold = true;
                 listing.SaleInformation = sale;
