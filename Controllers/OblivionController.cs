@@ -300,7 +300,7 @@ namespace OblivionAPI.Controllers {
         [Route("getPaymentTokens")]
         public async Task<ActionResult<List<PaymentTokenDetails>>> GetPaymentTokens() {
             _logger.LogInformation("getPaymentTokens on {ChainID}", _chainID);
-            var tokens = await _database.GetPaymentTokens(_chainID);
+            var tokens = await DatabaseService.GetPaymentTokens(_chainID);
             if (tokens == null) return NotFound(null);
             return Ok(tokens.ToArray());
         }
