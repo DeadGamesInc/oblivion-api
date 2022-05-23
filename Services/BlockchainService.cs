@@ -54,6 +54,9 @@ namespace OblivionAPI.Services {
                 var getURI = contract.GetFunction("tokenURI");
                 nft.URI = await getURI.CallAsync<string>(1);
 
+                var getTotalSupply = contract.GetFunction("totalSupply");
+                nft.TotalSupply = await getTotalSupply.CallAsync<uint>();
+
                 return nft;
             } catch (Exception error) {
                 _logger.LogError(error, "An exception occured while getting NFT details for {Address} on {ChainID}", address, chainID);

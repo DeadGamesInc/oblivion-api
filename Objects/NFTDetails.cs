@@ -14,6 +14,7 @@ namespace OblivionAPI.Objects {
         public string Address { get; set; }
         public string Name { get; set; }
         public string Symbol { get; set; }
+        public uint TotalSupply { get; set; }
         public string URI { get; set; }
         public string CacheHighRes { get; set; }
         //public string CacheLowRes { get; set; }
