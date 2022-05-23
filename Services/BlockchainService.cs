@@ -157,7 +157,7 @@ namespace OblivionAPI.Services {
 
                 var result = await getFunction.CallAsync<OfferResponse>(listingID, paymentToken, offerID);
                 
-                return new OfferDetails(paymentToken, offerID, version, result);
+                return new OfferDetails(paymentToken, listingID, offerID, version, result);
             } catch (Exception error) {
                 _logger.LogError(error, "An exception occured retrieving details for offer {PaymentToken}:{OfferID} on listing {ListingID} on {ChainID}", paymentToken, offerID, listingID, chainID);
                 return null;

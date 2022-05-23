@@ -106,6 +106,13 @@ namespace OblivionAPI.Services {
                 return listing?.Offers.ToList();
             });
         }
+
+        public async Task<List<OfferDetails>> GetUserOffers(ChainID chainID, string wallet) {
+            return await Task.Run(() => {
+                var details = _details.Find(a => a.ChainID == chainID);
+                return details?.Listings.SelectMany(listing => listing.Offers.Where(a => a.Offeror == wallet)).ToList();
+            });
+        }
         
         public async Task<List<CollectionDetails>> GetCollections(ChainID chainID) {
             return await Task.Run(() => {

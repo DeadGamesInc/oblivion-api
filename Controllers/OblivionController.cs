@@ -134,7 +134,36 @@ namespace OblivionAPI.Controllers {
             var list = listings.Where(a => a.Owner == wallet && a.SaleState == 0);
             return Ok(list.ToArray());
         }
-        
+
+        [HttpGet]
+        [Route("getUserOffers/{wallet}")]
+        public async Task<ActionResult<OfferDetails>> GetUserOffers(string wallet) {
+            _logger.LogInformation("getUserOffers for {Wallet} on {ChainID}", wallet, _chainID);
+            var offers = await _database.GetUserOffers(_chainID, wallet);
+            if (offers == null) return NotFound(null);
+            return Ok(offers.ToArray());
+        }
+
+        [HttpGet]
+        [Route("getUserCollections/{wallet}")]
+        public async Task<ActionResult<CollectionDetails>> GetUserCollections(string wallet) {
+            _logger.LogInformation("getUserCollections for {Wallet} on {ChainID}", wallet, _chainID);
+            var collections = await _database.GetCollections(_chainID);
+            if (collections == null) return NotFound(null);
+            var list = collections.Where(a => a.Owner == wallet);
+            return Ok(list.ToArray());
+        }
+
+        [HttpGet]
+        [Route("getUserReleases/{wallet}")]
+        public async Task<ActionResult<ReleaseDetails>> GetUserReleases(string wallet) {
+            _logger.LogInformation("getUserReleases for {Wallet} on {ChainID}", wallet, _chainID);
+            var releases = await _database.GetReleases(_chainID);
+            if (releases == null) return NotFound(null);
+            var list = releases.Where(a => a.Owner == wallet);
+            return Ok(list.ToArray());
+        }
+
         [HttpGet]
         [Route("getListing/{version:int}/{id}")]
         public async Task<ActionResult<ListingDetails>> GetListing(int version, uint id) {
