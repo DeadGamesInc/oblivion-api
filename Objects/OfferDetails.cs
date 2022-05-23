@@ -26,6 +26,7 @@ namespace OblivionAPI.Objects {
         public OfferDetails(string paymentToken, uint listingId, uint id, int version, OfferResponse response) {
             PaymentToken = paymentToken;
             ID = id;
+            ListingId = listingId;
             Version = version;
             Offeror = response.Offeror;
             Amount = response.Amount.ToString();
