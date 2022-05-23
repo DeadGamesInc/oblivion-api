@@ -381,6 +381,11 @@ namespace OblivionAPI.Services {
             if (offer == null) {
                 offer = await _blockchain.GetOffer(chainID, version, id, paymentToken, offerID);
                 if (offer == null) return null;
+                offer.TokenId = listing.TokenId;
+
+                var nft = await RetrieveNFT(chainID, listing.NFT, false);
+                if (nft != null) offer.NftSymbol = nft.Symbol;
+                
                 listing.Offers.Add(offer);
                 fresh = true;
             }

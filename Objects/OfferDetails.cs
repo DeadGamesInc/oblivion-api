@@ -15,6 +15,8 @@ namespace OblivionAPI.Objects {
         public uint ListingId { get; set; }
         public uint ID { get; set; }
         public int Version { get; set; }
+        public uint TokenId { get; set; }
+        public string NftSymbol { get; set; }
         public DateTime LastRetrieved;
         public string Offeror { get; set; }
         public string Amount { get; set; }
