@@ -38,6 +38,7 @@ namespace OblivionAPI.Objects {
         }
 
         public void Update(CollectionDetails details) {
+            Owner = details.Owner;
             Treasury = details.Treasury;
             Royalties = details.Royalties;
             Nfts = details.Nfts;
