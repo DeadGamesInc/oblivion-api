@@ -432,9 +432,9 @@ namespace OblivionAPI.Services {
 
             if (nft == null) return null;
 
-            if (nft is { Metadata: null } || forceUpdate) {
+            if (nft is { Metadata: null } || !nft.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || forceUpdate) {
                 var metadata = await _lookup.GetNFTMetadata(nft.URI);
-                if (metadata != null || forceUpdate) {
+                if (metadata != null) {
                     nft.Metadata = new NFTMetadata(metadata);
                     var cache = await _imageCache.ImageCache(chainID, address, nft.Metadata.Image, 1, false);
                     nft.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
