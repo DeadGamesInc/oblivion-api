@@ -18,97 +18,97 @@ using OblivionAPI.Objects;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 
-namespace OblivionAPI.Services {
-    public class ImageCacheService {
-        private readonly ILogger<ImageCacheService> _logger;
-        private readonly IHttpClientFactory _httpFactory;
+namespace OblivionAPI.Services; 
 
-        public ImageCacheService(ILogger<ImageCacheService> logger, IHttpClientFactory httpFactory) {
-            _logger = logger;
-            _httpFactory = httpFactory;
-        }
+public class ImageCacheService {
+    private readonly ILogger<ImageCacheService> _logger;
+    private readonly IHttpClientFactory _httpFactory;
 
-        public async Task<ImageCacheDetails> ImageCache(ChainID chainID, string nft, string uri, uint id, bool clearExisting) {
-            if (clearExisting) ClearCachedImages(nft, id);
-            var details = new ImageCacheDetails();
+    public ImageCacheService(ILogger<ImageCacheService> logger, IHttpClientFactory httpFactory) {
+        _logger = logger;
+        _httpFactory = httpFactory;
+    }
 
-            try {
-                _logger.LogDebug("Performing image caching for {Nft} on {ChainID}", nft, chainID);
+    public async Task<ImageCacheDetails> ImageCache(ChainID chainID, string nft, string uri, uint id, bool clearExisting) {
+        if (clearExisting) ClearCachedImages(nft, id);
+        var details = new ImageCacheDetails();
+
+        try {
+            _logger.LogDebug("Performing image caching for {Nft} on {ChainID}", nft, chainID);
                 
-                uri = uri.Replace(Globals.IPFS_RAW_PREFIX, Globals.IPFS_HTTP_PREFIX);
+            uri = uri.Replace(Globals.IPFS_RAW_PREFIX, Globals.IPFS_HTTP_PREFIX);
 
-                var highResFile = $"{nft}_{id}_high";
-                //var lowResFile = $"{nft}_{id}_low";
+            var highResFile = $"{nft}_{id}_high";
+            //var lowResFile = $"{nft}_{id}_low";
 
-                details.HighResImage = await GetHighRes(uri, highResFile);
+            details.HighResImage = await GetHighRes(uri, highResFile);
 
-                //if (!string.IsNullOrEmpty(details.HighResImage))
-                //    details.LowResImage = await ConvertLowRes(highResFile, lowResFile);
+            //if (!string.IsNullOrEmpty(details.HighResImage))
+            //    details.LowResImage = await ConvertLowRes(highResFile, lowResFile);
                 
-                return details;
-            } catch (Exception error) {
-                _logger.LogError(error, "An exception occured performing image caching for {Nft} on {ChainID}", nft, chainID);
-                return details;
-            }
+            return details;
+        } catch (Exception error) {
+            _logger.LogError(error, "An exception occured performing image caching for {Nft} on {ChainID}", nft, chainID);
+            return details;
         }
+    }
 
-        private async Task<string> GetHighRes(string uri, string file) {
-            try {
-                var highResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, file);
-                if (File.Exists(highResFile)) return Globals.IMAGE_CACHE_PREFIX + file;
-                _logger.LogDebug("Getting high res image from {Uri}", uri);
-                var client = _httpFactory.CreateClient();
-                var response = await client.GetAsync(uri);
-                var content = await response.Content.ReadAsStreamAsync();
+    private async Task<string> GetHighRes(string uri, string file) {
+        try {
+            var highResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, file);
+            if (File.Exists(highResFile)) return Globals.IMAGE_CACHE_PREFIX + file;
+            _logger.LogDebug("Getting high res image from {Uri}", uri);
+            var client = _httpFactory.CreateClient();
+            var response = await client.GetAsync(uri);
+            var content = await response.Content.ReadAsStreamAsync();
 
-                await using var highRes = File.Create(highResFile);
-                await content.CopyToAsync(highRes);
+            await using var highRes = File.Create(highResFile);
+            await content.CopyToAsync(highRes);
 
-                highRes.Close();
-                await highRes.DisposeAsync();
-                content.Close();
-                await content.DisposeAsync();
+            highRes.Close();
+            await highRes.DisposeAsync();
+            content.Close();
+            await content.DisposeAsync();
                 
-                return Globals.IMAGE_CACHE_PREFIX + file;
-            }
-            catch (Exception error) {
-                _logger.LogError(error, "An exception occured while retrieving high res image from {Uri}", uri);
-                return null;
-            }
+            return Globals.IMAGE_CACHE_PREFIX + file;
         }
+        catch (Exception error) {
+            _logger.LogError(error, "An exception occured while retrieving high res image from {Uri}", uri);
+            return null;
+        }
+    }
 
-        private async Task<string> ConvertLowRes(string highResFile, string name) {
-            try {
-                var lowResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, name);
-                if (File.Exists(lowResFile)) return Globals.IMAGE_CACHE_PREFIX + name;
-                var highFile = Path.Combine(Globals.IMAGE_CACHE_DIR, highResFile);
+    private async Task<string> ConvertLowRes(string highResFile, string name) {
+        try {
+            var lowResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, name);
+            if (File.Exists(lowResFile)) return Globals.IMAGE_CACHE_PREFIX + name;
+            var highFile = Path.Combine(Globals.IMAGE_CACHE_DIR, highResFile);
 
-                using var image = await Image.LoadAsync(highFile);
-                image
-                    .Mutate(a => a
+            using var image = await Image.LoadAsync(highFile);
+            image
+                .Mutate(a => a
                         
                     .Resize(Globals.REDUCED_IMAGE_WIDTH, Globals.REDUCED_IMAGE_HEIGHT));
-                await image.SaveAsPngAsync(lowResFile);
+            await image.SaveAsPngAsync(lowResFile);
                 
-                image.Dispose();
-                return Globals.IMAGE_CACHE_PREFIX + name;
-            } catch (UnknownImageFormatException error) {
-                if (error.Message.Contains("Image cannot be loaded")) 
-                    _logger.LogWarning("Failed to generate low res image for {HighResFile} - Likely a movie image", highResFile);
-                else _logger.LogCritical(error, "Error triggers: {Error}", error.Message);
-                return null;
-            } catch (Exception error) {
-                _logger.LogError(error, "An exception occured converting low res image for {HighResFile}", highResFile);
-                return null;
-            }
+            image.Dispose();
+            return Globals.IMAGE_CACHE_PREFIX + name;
+        } catch (UnknownImageFormatException error) {
+            if (error.Message.Contains("Image cannot be loaded")) 
+                _logger.LogWarning("Failed to generate low res image for {HighResFile} - Likely a movie image", highResFile);
+            else _logger.LogCritical(error, "Error triggers: {Error}", error.Message);
+            return null;
+        } catch (Exception error) {
+            _logger.LogError(error, "An exception occured converting low res image for {HighResFile}", highResFile);
+            return null;
         }
+    }
         
-        private static void ClearCachedImages(string nft, uint id) {
-            var highResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_high");
-            var lowResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_low");
+    private static void ClearCachedImages(string nft, uint id) {
+        var highResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_high");
+        var lowResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_low");
             
-            if (File.Exists(highResFile)) File.Delete(highResFile);
-            if (File.Exists(lowResFile)) File.Delete(lowResFile);
-        }
+        if (File.Exists(highResFile)) File.Delete(highResFile);
+        if (File.Exists(lowResFile)) File.Delete(lowResFile);
     }
 }

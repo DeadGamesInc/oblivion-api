@@ -5,9 +5,9 @@
  * 
  */
 
-namespace OblivionAPI.Objects {
-    public class BlockchainDetails {
-        public ChainID ChainID;
-        public string Node;
-    }
+namespace OblivionAPI.Objects; 
+
+public class BlockchainDetails {
+    public ChainID ChainID;
+    public string Node;
 }

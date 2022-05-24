@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 using OblivionAPI.Objects;
 using OblivionAPI.Services;
 
-namespace OblivionAPI.Controllers {
-    [ApiController]
-    [Route("/nervos_testnet/")]
-    public class NervosTestnetController : OblivionController {
-        public NervosTestnetController(ILogger<NervosTestnetController> logger, DatabaseService database, ReportsService reports) 
-            : base(logger, database, reports, ChainID.Nervos_Testnet) {}
-    }
+namespace OblivionAPI.Controllers; 
+
+[ApiController]
+[Route("/nervos_testnet/")]
+public class NervosTestnetController : OblivionController {
+    public NervosTestnetController(ILogger<NervosTestnetController> logger, DatabaseService database, ReportsService reports) 
+        : base(logger, database, reports, ChainID.Nervos_Testnet) {}
 }

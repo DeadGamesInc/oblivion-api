@@ -14,42 +14,42 @@ using Microsoft.Extensions.FileProviders;
 using OblivionAPI.Config;
 using OblivionAPI.Services;
 
-namespace OblivionAPI {
-    public class Startup {
-        public void ConfigureServices(IServiceCollection services) {
-            services.AddCors(options => 
-                options.AddPolicy("Everyone", builder => {
-                    builder
-                        .AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                }));
-            services.AddSingleton<ImageCacheService>();
-            services.AddSingleton<LookupService>();
-            services.AddSingleton<BlockchainService>();
-            services.AddSingleton<DatabaseService>();
-            services.AddSingleton<ReportsService>();
-            services.AddControllers();
-            services.AddHostedService<MonitorService>();
-            services.AddHttpClient();
-        }
+namespace OblivionAPI; 
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-            env.WebRootPath = Globals.WEB_ROOT;
-            app.UseDeveloperExceptionPage();
-            app.UseStaticFiles(new StaticFileOptions {
-                ServeUnknownFileTypes = true,
-                FileProvider = new PhysicalFileProvider(Globals.IMAGE_CACHE_DIR),
-                RequestPath = new PathString("/image-cache") 
-            });
-            app.UseRouting();
-            app.UseCors("Everyone");
-            app.UseAuthorization();
+public class Startup {
+    public void ConfigureServices(IServiceCollection services) {
+        services.AddCors(options => 
+            options.AddPolicy("Everyone", builder => {
+                builder
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }));
+        services.AddSingleton<ImageCacheService>();
+        services.AddSingleton<LookupService>();
+        services.AddSingleton<BlockchainService>();
+        services.AddSingleton<DatabaseService>();
+        services.AddSingleton<ReportsService>();
+        services.AddControllers();
+        services.AddHostedService<MonitorService>();
+        services.AddHttpClient();
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
+        env.WebRootPath = Globals.WEB_ROOT;
+        app.UseDeveloperExceptionPage();
+        app.UseStaticFiles(new StaticFileOptions {
+            ServeUnknownFileTypes = true,
+            FileProvider = new PhysicalFileProvider(Globals.IMAGE_CACHE_DIR),
+            RequestPath = new PathString("/image-cache") 
+        });
+        app.UseRouting();
+        app.UseCors("Everyone");
+        app.UseAuthorization();
             
-            app.UseEndpoints(endpoints => {
-                endpoints.MapControllers();
-                endpoints.MapGet("/", async context => await context.Response.WriteAsync("ALIVE"));
-            });
-        }
+        app.UseEndpoints(endpoints => {
+            endpoints.MapControllers();
+            endpoints.MapGet("/", async context => await context.Response.WriteAsync("ALIVE"));
+        });
     }
 }

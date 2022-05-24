@@ -8,12 +8,12 @@
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using System.Collections.Generic;
 
-namespace OblivionAPI.Responses {
-    [FunctionOutput]
-    public class ReleaseTreasuryDetailsResponse : IFunctionOutputDTO {
-        [Parameter("address[]", "", 1)]
-        public List<string> TreasuryAddresses { get; set; }
-        [Parameter("uint[]", "", 2)]
-        public List<uint> TreasuryAllocations { get; set; }
-    }
+namespace OblivionAPI.Responses; 
+
+[FunctionOutput]
+public class ReleaseTreasuryDetailsResponse : IFunctionOutputDTO {
+    [Parameter("address[]", "", 1)]
+    public List<string> TreasuryAddresses { get; set; }
+    [Parameter("uint[]", "", 2)]
+    public List<uint> TreasuryAllocations { get; set; }
 }

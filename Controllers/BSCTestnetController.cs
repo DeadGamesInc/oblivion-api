@@ -12,11 +12,11 @@ using Microsoft.Extensions.Logging;
 using OblivionAPI.Objects;
 using OblivionAPI.Services;
 
-namespace OblivionAPI.Controllers {
-    [ApiController]
-    [Route("/bsc_testnet/")]
-    public class BSCTestnetController : OblivionController {
-        public BSCTestnetController(ILogger<BSCTestnetController> logger, DatabaseService database, ReportsService reports) 
-            : base(logger, database, reports, ChainID.BSC_Testnet) {}
-    }
+namespace OblivionAPI.Controllers; 
+
+[ApiController]
+[Route("/bsc_testnet/")]
+public class BSCTestnetController : OblivionController {
+    public BSCTestnetController(ILogger<BSCTestnetController> logger, DatabaseService database, ReportsService reports) 
+        : base(logger, database, reports, ChainID.BSC_Testnet) {}
 }

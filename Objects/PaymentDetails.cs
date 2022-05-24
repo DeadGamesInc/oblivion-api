@@ -7,9 +7,9 @@
 
 using System.Collections.Generic;
 
-namespace OblivionAPI.Objects {
-    public class PaymentDetails {
-        public ChainID ChainID;
-        public List<PaymentTokenDetails> PaymentTokens;
-    }
+namespace OblivionAPI.Objects; 
+
+public class PaymentDetails {
+    public ChainID ChainID;
+    public List<PaymentTokenDetails> PaymentTokens;
 }
