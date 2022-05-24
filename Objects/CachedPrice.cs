@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OblivionAPI.Objects; 
+﻿namespace OblivionAPI.Objects; 
 
 public class CachedPrice {
     public string CoinGeckoKey;

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OblivionAPI.Objects; 
+﻿namespace OblivionAPI.Objects; 
 
 [Serializable]
 public class NftMetadataResponse {

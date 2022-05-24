@@ -8,14 +8,9 @@
 using CoinGecko.Clients;
 using CoinGecko.Interfaces;
 using Microsoft.Extensions.Logging;
-using OblivionAPI.Config;
-using OblivionAPI.Objects;
-using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace OblivionAPI.Services; 
 

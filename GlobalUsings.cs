@@ -1,0 +1,9 @@
+﻿global using System;
+global using System.Collections.Generic;
+global using System.IO;
+global using System.Threading.Tasks;
+global using OblivionAPI.Config;
+global using OblivionAPI.Objects;
+global using OblivionAPI.Reports;
+global using OblivionAPI.Responses;
+global using OblivionAPI.Services;

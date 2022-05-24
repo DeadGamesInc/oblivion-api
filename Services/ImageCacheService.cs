@@ -5,16 +5,8 @@
  * 
  */
 
-using System;
-using System.IO;
 using System.Net.Http;
-using System.Threading.Tasks;
-
 using Microsoft.Extensions.Logging;
-
-using OblivionAPI.Config;
-using OblivionAPI.Objects;
-
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 

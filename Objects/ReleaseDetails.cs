@@ -5,9 +5,6 @@
  * 
  */
 
-using OblivionAPI.Responses;
-using System;
-
 namespace OblivionAPI.Objects; 
 
 public class ReleaseDetails {

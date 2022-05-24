@@ -7,11 +7,8 @@
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OblivionAPI.Config;
-using System;
 using System.Diagnostics;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Timers;
 
 using Timer = System.Timers.Timer;

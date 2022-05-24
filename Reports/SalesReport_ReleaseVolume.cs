@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OblivionAPI.Reports; 
+﻿namespace OblivionAPI.Reports; 
 
 [Serializable]
 public class ReleaseCollection {

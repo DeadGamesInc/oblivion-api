@@ -7,12 +7,8 @@
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using OblivionAPI.Config;
 using Serilog;
 using Serilog.Events;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace OblivionAPI; 
 

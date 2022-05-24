@@ -5,8 +5,6 @@
  * 
  */
 
-using OblivionAPI.Objects;
-
 namespace OblivionAPI.Config; 
 
 public static class Contracts {

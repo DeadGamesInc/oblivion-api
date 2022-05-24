@@ -5,10 +5,6 @@
  * 
  */
 
-using OblivionAPI.Responses;
-using System;
-using System.Collections.Generic;
-
 namespace OblivionAPI.Objects; 
 
 [Serializable]

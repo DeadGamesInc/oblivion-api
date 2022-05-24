@@ -8,14 +8,7 @@
 using Microsoft.Extensions.Logging;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
-using OblivionAPI.Objects;
-using OblivionAPI.Config;
-using OblivionAPI.Responses;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace OblivionAPI.Services; 
 

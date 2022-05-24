@@ -5,11 +5,6 @@
  * 
  */
 
-using OblivionAPI.Objects;
-using System;
-using System.Collections.Generic;
-using System.IO;
-
 namespace OblivionAPI.Config; 
 
 public static class Globals {

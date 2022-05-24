@@ -5,8 +5,6 @@
  * 
  */
 
-using System.Collections.Generic;
-
 namespace OblivionAPI.Objects; 
 
 public class OblivionDetails {

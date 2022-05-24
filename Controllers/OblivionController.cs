@@ -8,14 +8,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using OblivionAPI.Objects;
-using OblivionAPI.Services;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-
-using OblivionAPI.Reports;
-
 
 namespace OblivionAPI.Controllers; 
 
