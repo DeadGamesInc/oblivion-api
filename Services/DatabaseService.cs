@@ -30,7 +30,7 @@ public class DatabaseService {
         _logger = logger;
 
         _details = new List<OblivionDetails> {
-            new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 },
+            //new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 },
             new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 },
             new() { ChainID = ChainID.Nervos_Testnet }
         };
@@ -420,15 +420,16 @@ public class DatabaseService {
         if (details == null) return null;
 
         var nft = details.NFTs.Find(a => a.Address == address);
+        var addNeeded = nft == null;
         if (nft == null || forceUpdate) {
             nft = await _blockchain.GetNFTDetails(chainID, address);
-            if (nft != null) details.NFTs.Add(nft);
+            if (nft != null && addNeeded) details.NFTs.Add(nft);
         }
 
         if (nft == null) return null;
 
         if (nft is { Metadata: null } || !nft.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || forceUpdate) {
-            var metadata = await _lookup.GetNFTMetadata(nft.URI);
+            var metadata = await _lookup.GetNFTMetadata(nft.URI ?? nft.BaseURI);
             if (metadata != null) {
                 nft.Metadata = new NFTMetadata(metadata);
                 var cache = await _imageCache.ImageCache(chainID, address, nft.Metadata.Image, 1, false);

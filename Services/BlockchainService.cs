@@ -29,13 +29,13 @@ public class BlockchainService {
     }
 
     public async Task<NFTDetails> GetNFTDetails(ChainID chainID, string address) {
+        var nft = new NFTDetails { Address = address };
+        
         try {
             _logger.LogDebug("Retrieving details for NFT {Address} on {ChainID}", address, chainID);
 
             var web3 = GetWeb3(chainID);
             if (web3 == null) return null;
-
-            var nft = new NFTDetails { Address = address };
 
             var contract = web3.Eth.GetContract(ABIs.OblivionNFT, address);
 
@@ -45,16 +45,23 @@ public class BlockchainService {
             var getSymbol = contract.GetFunction("symbol");
             nft.Symbol = await getSymbol.CallAsync<string>();
 
-            var getURI = contract.GetFunction("tokenURI");
-            nft.URI = await getURI.CallAsync<string>(1);
-
             var getTotalSupply = contract.GetFunction("totalSupply");
             nft.TotalSupply = await getTotalSupply.CallAsync<uint>();
+
+            try {
+                var getBaseURI = contract.GetFunction("baseURI");
+                nft.BaseURI = await getBaseURI.CallAsync<string>();
+            } catch (Exception error) {
+                _logger.LogDebug(error, "Failed to set baseURI");
+            }
+            
+            var getURI = contract.GetFunction("tokenURI");
+            nft.URI = await getURI.CallAsync<string>(1);
 
             return nft;
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured while getting NFT details for {Address} on {ChainID}", address, chainID);
-            return null;
+            return nft;
         }
     }
 

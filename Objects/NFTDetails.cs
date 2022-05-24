@@ -13,6 +13,7 @@ public class NFTDetails {
     public string Name { get; set; }
     public string Symbol { get; set; }
     public uint TotalSupply { get; set; }
+    public string BaseURI;
     public string URI { get; set; }
     public string CacheHighRes { get; set; }
     //public string CacheLowRes { get; set; }
