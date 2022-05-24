@@ -30,7 +30,7 @@ public class DatabaseService {
         _logger = logger;
 
         _details = new List<OblivionDetails> {
-            //new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 },
+            new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 },
             new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 },
             new() { ChainID = ChainID.Nervos_Testnet }
         };
