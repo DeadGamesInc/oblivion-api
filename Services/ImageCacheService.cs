@@ -8,6 +8,8 @@
 using System.Net.Http;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
 
 namespace OblivionAPI.Services; 
@@ -31,13 +33,15 @@ public class ImageCacheService {
             uri = uri.Replace(Globals.IPFS_RAW_PREFIX, Globals.IPFS_HTTP_PREFIX);
 
             var highResFile = $"{nft}_{id}_high";
-            //var lowResFile = $"{nft}_{id}_low";
+            var lowResFile = $"{nft}_{id}_low";
 
             details.HighResImage = await GetHighRes(uri, highResFile);
 
-            //if (!string.IsNullOrEmpty(details.HighResImage))
-            //    details.LowResImage = await ConvertLowRes(highResFile, lowResFile);
-                
+            if (!string.IsNullOrEmpty(details.HighResImage)) {
+                var info = new FileInfo(Path.Combine(Globals.IMAGE_CACHE_DIR, highResFile));
+                details.LowResImage = info.Length > 1048576 ? await ConvertLowRes(highResFile, lowResFile) : details.HighResImage;
+            }
+
             return details;
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured performing image caching for {Nft} on {ChainID}", nft, chainID);
@@ -77,12 +81,12 @@ public class ImageCacheService {
             var highFile = Path.Combine(Globals.IMAGE_CACHE_DIR, highResFile);
 
             using var image = await Image.LoadAsync(highFile);
-            image
-                .Mutate(a => a
-                        
-                    .Resize(Globals.REDUCED_IMAGE_WIDTH, Globals.REDUCED_IMAGE_HEIGHT));
-            await image.SaveAsPngAsync(lowResFile);
+            await using var outFile = File.Create(lowResFile);
+            
+            await image.SaveAsJpegAsync(outFile, new JpegEncoder { Quality = 75 });
                 
+            outFile.Close();
+            await outFile.DisposeAsync();
             image.Dispose();
             return Globals.IMAGE_CACHE_PREFIX + name;
         } catch (UnknownImageFormatException error) {
