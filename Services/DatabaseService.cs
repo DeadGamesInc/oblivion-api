@@ -472,7 +472,7 @@ public class DatabaseService {
                     if (!string.IsNullOrEmpty(cache.LowResImage)) token.CacheLowRes = cache.LowResImage;
                     else token.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
                 } else {
-                    //token.CacheLowRes = nft.CacheLowRes;
+                    token.CacheLowRes = nft.CacheLowRes;
                     token.CacheHighRes = nft.CacheHighRes;
                 }
             }
