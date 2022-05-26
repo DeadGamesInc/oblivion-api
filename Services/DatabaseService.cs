@@ -434,8 +434,8 @@ public class DatabaseService {
                 nft.Metadata = new NFTMetadata(metadata);
                 var cache = await _imageCache.ImageCache(chainID, address, nft.Metadata.Image, 1, false);
                 nft.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
-                //if (!string.IsNullOrEmpty(cache.LowResImage)) nft.CacheLowRes = cache.LowResImage;
-                //else nft.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
+                if (!string.IsNullOrEmpty(cache.LowResImage)) nft.CacheLowRes = cache.LowResImage;
+                else nft.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
             }
         }
 
@@ -469,8 +469,8 @@ public class DatabaseService {
                 if (nft.Metadata?.Image != token.Metadata?.Image && token.Metadata != null) {
                     var cache = await _imageCache.ImageCache(chainID, address, token.Metadata.Image, token.TokenId, false);
                     token.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
-                    //if (!string.IsNullOrEmpty(cache.LowResImage)) token.CacheLowRes = cache.LowResImage;
-                    //else token.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
+                    if (!string.IsNullOrEmpty(cache.LowResImage)) token.CacheLowRes = cache.LowResImage;
+                    else token.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
                 } else {
                     //token.CacheLowRes = nft.CacheLowRes;
                     token.CacheHighRes = nft.CacheHighRes;

@@ -13,5 +13,5 @@ public class NFTTokenIDInfo {
     public string URI { get; set; }
     public NFTMetadata Metadata { get; set; }
     public string CacheHighRes { get; set; }
-    //public string CacheLowRes { get; set; }
+    public string CacheLowRes { get; set; }
 }

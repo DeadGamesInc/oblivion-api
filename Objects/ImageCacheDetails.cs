@@ -2,5 +2,5 @@
 
 public class ImageCacheDetails {
     public string HighResImage;
-    //public string LowResImage;
+    public string LowResImage;
 }
