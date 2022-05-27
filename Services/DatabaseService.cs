@@ -462,9 +462,11 @@ public class DatabaseService {
             }
         }
 
-        if (token is { Metadata: null }) {
+        if (token == null) return null;
+
+        if (token is { Metadata: null } || !token.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || forceUpdate) {
             var metadata = await _lookup.GetNFTMetadata(token.URI);
-            if (metadata != null || forceUpdate) {
+            if (metadata != null) {
                 token.Metadata = new NFTMetadata(metadata);
                 if (nft.Metadata?.Image != token.Metadata?.Image && token.Metadata != null) {
                     var cache = await _imageCache.ImageCache(chainID, address, token.Metadata.Image, token.TokenId, false);
