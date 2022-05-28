@@ -7,20 +7,21 @@
 
 namespace OblivionAPI.Objects; 
 
+[Serializable]
 public class OblivionDetails {
-    public ChainID ChainID;
-    public uint ReleaseStartingBlock = 0;
-    public uint LastReleaseScannedBlock = 0;
+    public ChainID ChainID { get; set; }
+    public uint ReleaseStartingBlock { get; set; }
+    public uint LastReleaseScannedBlock { get; set; }
         
-    public uint TotalListings;
-    public uint TotalListingsV1;
-    public uint TotalListingsV2;
-    public uint TotalCollections;
-    public uint TotalReleases;
+    public uint TotalListings { get; set; }
+    public uint TotalListingsV1 { get; set; }
+    public uint TotalListingsV2 { get; set; }
+    public uint TotalCollections { get; set; }
+    public uint TotalReleases { get; set; }
         
-    public readonly List<ListingDetails> Listings = new();
-    public readonly List<CollectionDetails> Collections = new();
-    public readonly List<ReleaseDetails> Releases = new();
-    public readonly List<NFTDetails> NFTs = new();
-    public readonly List<ReleaseSaleDetails> ReleaseSales = new();
+    public List<ListingDetails> Listings { get; set; } = new();
+    public List<CollectionDetails> Collections { get; set; } = new();
+    public List<ReleaseDetails> Releases { get; set; } = new();
+    public List<NFTDetails> NFTs { get; set; } = new();
+    public List<ReleaseSaleDetails> ReleaseSales { get; set; } = new();
 }

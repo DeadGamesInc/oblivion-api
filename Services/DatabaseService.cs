@@ -8,6 +8,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Text.Json;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
@@ -15,13 +16,14 @@ namespace OblivionAPI.Services;
 
 public class DatabaseService {
     public bool InitialSyncComplete;
+    public bool DatabaseLoaded;
         
     private readonly BlockchainService _blockchain;
     private readonly LookupService _lookup;
     private readonly ImageCacheService _imageCache;
     private readonly ILogger<DatabaseService> _logger;
 
-    private readonly List<OblivionDetails> _details;
+    private List<OblivionDetails> _details;
 
     public DatabaseService(BlockchainService blockchain, LookupService lookup, ImageCacheService imageCache, ILogger<DatabaseService> logger) {
         _blockchain = blockchain;
@@ -34,6 +36,28 @@ public class DatabaseService {
             new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 },
             new() { ChainID = ChainID.Nervos_Testnet }
         };
+    }
+
+    public async Task LoadDatabase() {
+        DatabaseLoaded = true;
+        try {
+            if (!File.Exists(Globals.DB_FILE)) return;
+            await using var stream = File.OpenRead(Globals.DB_FILE);
+            _details = await JsonSerializer.DeserializeAsync<List<OblivionDetails>>(stream);
+            await stream.DisposeAsync();
+        } catch (Exception error) {
+            _logger.LogError(error, "An exception occured while loading database file");
+        }
+    }
+
+    public async Task SaveDatabase() {
+        try {
+            await using var stream = File.Create(Globals.DB_FILE);
+            await JsonSerializer.SerializeAsync(stream, _details);
+            await stream.DisposeAsync();
+        } catch (Exception error) {
+            _logger.LogError(error, "An exception occured while saving database file");
+        }
     }
         
     public async Task<uint> TotalListings(ChainID chainID) {
@@ -186,6 +210,7 @@ public class DatabaseService {
         var run = Task.WhenAll(tasks);
         await run.WaitAsync(new CancellationToken());
         InitialSyncComplete = true;
+        await SaveDatabase();
     }
 
     private async Task HandleChainUpdate(OblivionDetails set) {
@@ -470,9 +495,9 @@ public class DatabaseService {
                 token.Metadata = new NFTMetadata(metadata);
                 if (nft.Metadata?.Image != token.Metadata?.Image && token.Metadata != null) {
                     var cache = await _imageCache.ImageCache(chainID, address, token.Metadata.Image, token.TokenId, false);
-                    token.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
+                    token.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.CacheHighRes;
                     if (!string.IsNullOrEmpty(cache.LowResImage)) token.CacheLowRes = cache.LowResImage;
-                    else token.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
+                    else token.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.CacheLowRes;
                 } else {
                     token.CacheLowRes = nft.CacheLowRes;
                     token.CacheHighRes = nft.CacheHighRes;

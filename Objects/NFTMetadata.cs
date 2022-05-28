@@ -15,6 +15,7 @@ public class NFTMetadata {
     public string Image { get; set; }
     public List<NFTMetadataTrait> Attributes { get; set; } = new();
 
+    public NFTMetadata() {}
     public NFTMetadata(NftMetadataResponse response) {
         Name = response.name;
         Description = response.description;

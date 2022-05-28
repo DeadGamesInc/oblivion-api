@@ -28,12 +28,13 @@ public class ListingDetails {
     public OfferDetails? TopOffer { get; set; }
     public string TxHash { get; set; }
 
-    public bool Finalized;
+    public bool Finalized{ get; set; }
     public bool WasSold { get; set; }
     public OblivionSaleInformation SaleInformation { get; set; }
 
-    public List<OfferDetails> Offers = new();
-        
+    public List<OfferDetails> Offers { get; set; } = new();
+    
+    public ListingDetails() {}
     public ListingDetails(uint id, int version, ListingResponse response) {
         ID = id;
         Version = version;

@@ -25,6 +25,7 @@ public static class Globals {
     private static readonly string BASE_DIR = AppDomain.CurrentDomain.BaseDirectory;
     public static readonly string WEB_ROOT = Path.Combine(BASE_DIR, "wwwroot");
     public static readonly string IMAGE_CACHE_DIR = Path.Combine(WEB_ROOT, "image-cache");
+    public static readonly string DB_FILE = Path.Combine(WEB_ROOT, "database.json");
         
     public static readonly List<BlockchainDetails> Blockchains = new() {
         new() { ChainID = ChainID.BSC_Mainnet, Node = "https://bsc-dataseed.binance.org" },

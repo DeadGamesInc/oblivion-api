@@ -21,6 +21,7 @@ public class CollectionDetails {
     public string[] Nfts { get; set; }
     public DateTime LastRetrieved;
 
+    public CollectionDetails() {}
     public CollectionDetails(uint id, CollectionResponse response, string name, string image, string description, string banner, string[] nfts) {
         ID = id;
         Owner = response.Owner;

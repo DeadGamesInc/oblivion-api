@@ -27,9 +27,9 @@ public class MonitorService : IHostedService {
         _timer.Elapsed += UpdateOblivion;
     }
 
-    public Task StartAsync(CancellationToken stoppingToken) {
-        Task.Run(() => UpdateOblivion(this, null), stoppingToken);
-        return Task.CompletedTask;
+    public async Task StartAsync(CancellationToken stoppingToken) {
+        if (!_database.DatabaseLoaded) await _database.LoadDatabase();
+        await Task.Run(() => UpdateOblivion(this, null), stoppingToken);
     }
 
     public Task StopAsync(CancellationToken stoppingToken) {
