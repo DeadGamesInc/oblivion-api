@@ -470,9 +470,9 @@ public class DatabaseService {
                 token.Metadata = new NFTMetadata(metadata);
                 if (nft.Metadata?.Image != token.Metadata?.Image && token.Metadata != null) {
                     var cache = await _imageCache.ImageCache(chainID, address, token.Metadata.Image, token.TokenId, false);
-                    token.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
+                    token.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.CacheHighRes;
                     if (!string.IsNullOrEmpty(cache.LowResImage)) token.CacheLowRes = cache.LowResImage;
-                    else token.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : token.Metadata.Image;
+                    else token.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.CacheLowRes;
                 } else {
                     token.CacheLowRes = nft.CacheLowRes;
                     token.CacheHighRes = nft.CacheHighRes;
