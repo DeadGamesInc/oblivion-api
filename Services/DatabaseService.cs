@@ -50,7 +50,7 @@ public class DatabaseService {
         }
     }
 
-    public async Task SaveDatabase() {
+    private async Task SaveDatabase() {
         try {
             await using var stream = File.Create(Globals.DB_FILE);
             await JsonSerializer.SerializeAsync(stream, _details);
@@ -292,6 +292,10 @@ public class DatabaseService {
 
         for (var id = set.Collections.Count; id < set.TotalCollections; id++) 
             await RetrieveCollection(set.ChainID, Convert.ToUInt32(id), true);
+
+        var collections = _details.Find(a => a.ChainID == set.ChainID)?.Collections.ToList();
+        if (collections == null) return;
+        foreach (var nft in collections.SelectMany(collection => collection.Nfts)) await RetrieveNFT(set.ChainID, nft, false);
     }
 
     private async Task UpdateReleases(OblivionDetails set) {
@@ -300,6 +304,10 @@ public class DatabaseService {
 
         for (var id = set.Releases.Count; id < set.TotalReleases; id++) 
             await RetrieveRelease(set.ChainID, Convert.ToUInt32(id), true);
+
+        var releases = _details.Find(a => a.ChainID == set.ChainID)?.Releases.ToList();
+        if (releases == null) return;
+        foreach (var release in releases) await RetrieveNFT(set.ChainID, release.NFT, false);
     }
 
     private async Task FinalizeListing(ChainID chainID, int version, ListingDetails listing) {
