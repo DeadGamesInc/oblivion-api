@@ -9,5 +9,11 @@
       "ContainerPort": "5001"
     }
   ],
-  "Logging": "/app/*.log"
+  "Logging": "/app/*.log",
+  "Volumes": [
+    {
+      "HostDirectory": "/apidata",
+      "ContainerDirectory": "/app/wwwroot"
+    }
+  ]
 }

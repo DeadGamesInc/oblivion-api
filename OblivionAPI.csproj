@@ -25,4 +25,8 @@
       <PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include=".ebextensions\01-volume.config" />
+    </ItemGroup>
+
 </Project>
