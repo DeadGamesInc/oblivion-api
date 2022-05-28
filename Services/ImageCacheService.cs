@@ -8,6 +8,7 @@
 using System.Net.Http;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
@@ -80,14 +81,26 @@ public class ImageCacheService {
             if (File.Exists(lowResFile)) return Globals.IMAGE_CACHE_PREFIX + name;
             var highFile = Path.Combine(Globals.IMAGE_CACHE_DIR, highResFile);
 
-            using var image = await Image.LoadAsync(highFile);
+            using var reader = new StreamReader(highFile);
+            var image = await Image.LoadWithFormatAsync(reader.BaseStream);
+
+            if (image.Format == GifFormat.Instance) {
+                _logger.LogWarning("GIF detected for NFT {Address} - low res cache not generated", name);
+                reader.Close();
+                reader.Dispose();
+                image.Image.Dispose();
+                return null;
+            }
+            
             await using var outFile = File.Create(lowResFile);
             
-            await image.SaveAsJpegAsync(outFile, new JpegEncoder { Quality = 75 });
+            await image.Image.SaveAsJpegAsync(outFile, new JpegEncoder { Quality = 75 });
                 
             outFile.Close();
             await outFile.DisposeAsync();
-            image.Dispose();
+            image.Image.Dispose();
+            reader.Close();
+            reader.Dispose();
             return Globals.IMAGE_CACHE_PREFIX + name;
         } catch (UnknownImageFormatException error) {
             if (error.Message.Contains("Image cannot be loaded")) 
