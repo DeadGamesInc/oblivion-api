@@ -225,13 +225,8 @@ public abstract class OblivionController : ControllerBase {
     [Route("getNftsByAddress")]
     public async Task<ActionResult<NFTDetails[]>> GetNFTSByAddress([FromBody] string[] addresses) {
         _logger.LogInformation("getNftsByAddress on {ChainID}", _chainID);
-        var nfts = new List<NFTDetails>();
-        
-        foreach (var address in addresses) {
-            var nft = await _database.NFTDetails(_chainID, address);
-            if (nft != null) nfts.Add(nft);
-        }
-            
+        var nfts = await _database.GetNFTs(_chainID);
+        nfts = nfts.Where(a => addresses.Contains(a.Address)).ToList();
         return Ok(nfts.ToArray());
     }
 
