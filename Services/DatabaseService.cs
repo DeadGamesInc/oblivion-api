@@ -221,6 +221,7 @@ public class DatabaseService {
         await UpdateTokens(set.ChainID);
         await UpdateSaleCollections(set);
         await UpdateReleaseSales(set);
+        await UpdateListingCollections(set.ChainID);
     }
         
     private async Task UpdateBasicDetails(ChainID chainID) {
@@ -373,6 +374,24 @@ public class DatabaseService {
                 set.ReleaseSales.Add(sale);
             }
         }
+    }
+
+    private async Task UpdateListingCollections(ChainID chainID) {
+        await Task.Run(() => {
+            var details = _details.Find(a => a.ChainID == chainID);
+            if (details == null) return;
+            foreach (var listing in details.Listings.Where(a => !a.Finalized)) {
+                var collection = details.Collections.Find(a => a.Nfts.Contains(listing.NFT));
+                if (collection != null) {
+                    listing.CollectionId = collection.ID;
+                    listing.CollectionName = collection.Name;
+                } else {
+                    listing.CollectionId = null;
+                    listing.CollectionName = null;
+                }
+                
+            }
+        });
     }
 
     private async Task<ListingDetails> RetrieveListing(ChainID chainID, int version, uint id, bool forceUpdate) {

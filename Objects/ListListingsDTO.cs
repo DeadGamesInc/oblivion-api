@@ -21,6 +21,8 @@ public class ListListingsDTO {
     public string NftName { get; set; }
     public string NftCacheHighRes { get; set; }
     public string NftCacheLowRes { get; set; }
+    public uint? CollectionId { get; set; }
+    public string CollectionName { get; set; }
     public bool WasSold;
     public string Owner;
     public int OpenOffers;
@@ -39,6 +41,8 @@ public class ListListingsDTO {
         SaleState = listing.SaleState;
         WasSold = listing.WasSold;
         Owner = listing.Owner;
+        CollectionId = listing.CollectionId;
+        CollectionName = listing.CollectionName;
         OpenOffers = listing.Offers.Count(a => !a.Claimed);
         TopOfferAmount = listing.TopOffer?.Amount;
         TopOfferToken = listing.TopOffer?.PaymentToken;

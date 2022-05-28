@@ -28,6 +28,9 @@ public class ListingDetails {
     public OfferDetails? TopOffer { get; set; }
     public string TxHash { get; set; }
 
+    public uint? CollectionId { get; set; }
+    public string CollectionName { get; set; }
+    
     public bool Finalized{ get; set; }
     public bool WasSold { get; set; }
     public OblivionSaleInformation SaleInformation { get; set; }
