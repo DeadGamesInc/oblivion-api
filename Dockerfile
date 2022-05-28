@@ -19,4 +19,4 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "oblivionapi.dll"]
-VOLUME ["/apidata"]
+VOLUME ["/app/wwwroot"]
