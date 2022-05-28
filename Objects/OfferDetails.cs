@@ -23,6 +23,7 @@ public class OfferDetails {
     public string CreateBlock { get; set; }
     public string EndBlock { get; set; }
 
+    public OfferDetails() {}
     public OfferDetails(string paymentToken, uint listingId, uint id, int version, OfferResponse response) {
         PaymentToken = paymentToken;
         ID = id;

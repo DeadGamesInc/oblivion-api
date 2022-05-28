@@ -12,6 +12,7 @@ public class NFTMetadataTrait {
     public string TraitType { get; set; }
     public string Value { get; set; }
 
+    public NFTMetadataTrait() {}
     public NFTMetadataTrait(NftMetadataTraitResponse response) {
         TraitType = response.trait_type;
         Value = response.value;

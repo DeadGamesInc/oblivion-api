@@ -7,6 +7,7 @@
 
 namespace OblivionAPI.Objects; 
 
+[Serializable]
 public class ReleaseDetails {
     public uint ID { get; set; }
     public DateTime LastRetrieved;
@@ -26,6 +27,7 @@ public class ReleaseDetails {
     public string[] TreasuryAddresses { get; set; }
     public uint[] TreasuryAllocations { get; set; }
 
+    public ReleaseDetails() {}
     public ReleaseDetails(uint id, ReleaseResponse response, ReleaseTreasuryDetailsResponse treasury) {
         ID = id;
         Owner = response.Owner;
