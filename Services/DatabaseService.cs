@@ -380,7 +380,7 @@ public class DatabaseService {
         await Task.Run(() => {
             var details = _details.Find(a => a.ChainID == chainID);
             if (details == null) return;
-            foreach (var listing in details.Listings.Where(a => !a.Finalized)) {
+            foreach (var listing in details.Listings.Where(a => !a.Finalized || !InitialSyncComplete)) {
                 var collection = details.Collections.Find(a => a.Nfts.Contains(listing.NFT));
                 if (collection != null) {
                     listing.CollectionId = collection.ID;
