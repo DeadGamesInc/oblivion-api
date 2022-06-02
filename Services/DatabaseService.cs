@@ -35,14 +35,34 @@ public class DatabaseService {
 
     private void CheckDatabase() {
         _details ??= new();
-        var checkBsc = _details.Find(a => a.ChainID == ChainID.BSC_Mainnet);
-        if (checkBsc == null) _details.Add(new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 });
-        var checkBscTestnet = _details.Find(a => a.ChainID == ChainID.BSC_Testnet);
-        if (checkBscTestnet == null) _details.Add(new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 });
-        var checkNervosTestnet = _details.Find(a => a.ChainID == ChainID.Nervos_Testnet);
-        if (checkNervosTestnet == null) _details.Add(new() { ChainID = ChainID.Nervos_Testnet, ReleaseStartingBlock = 68736 });
+        
+        if (_details.Find(a => a.ChainID == ChainID.BSC_Mainnet) == null) _details.Add(new BSCMainnetDefaults());
+        if (_details.Find(a => a.ChainID == ChainID.BSC_Testnet) == null) _details.Add(new BSCTestnetDefaults());
+        if (_details.Find(a => a.ChainID == ChainID.Nervos_Testnet) == null) _details.Add(new NervosTestnetDefaults());
+        
         var checkOldNervosTestnet = _details.Find(a => a.ChainID == ChainID.Old_Nervos_Testnet);
         if (checkOldNervosTestnet != null) _details.Remove(checkOldNervosTestnet);
+
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CLEAR_DB"))) return;
+        if (!long.TryParse(Environment.GetEnvironmentVariable("CLEAR_DB"), out var chainId)) return;
+        
+        switch (chainId) {
+            case (long)ChainID.BSC_Mainnet:
+                var bsc = _details.Find(a => a.ChainID == ChainID.BSC_Mainnet);
+                if (bsc != null) _details.Remove(bsc);
+                _details.Add(new BSCMainnetDefaults());
+                break;
+            case (long)ChainID.BSC_Testnet:
+                var bscTestnet = _details.Find(a => a.ChainID == ChainID.BSC_Testnet);
+                if (bscTestnet != null) _details.Remove(bscTestnet);
+                _details.Add(new BSCTestnetDefaults());
+                break;
+            case (long)ChainID.Nervos_Testnet:
+                var nervosTestnet = _details.Find(a => a.ChainID == ChainID.Nervos_Testnet);
+                if (nervosTestnet != null) _details.Remove(nervosTestnet);
+                _details.Add(new NervosTestnetDefaults());
+                break;
+        }
     }
 
     public async Task LoadDatabase() {

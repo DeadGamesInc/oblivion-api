@@ -25,3 +25,24 @@ public class OblivionDetails {
     public List<NFTDetails> NFTs { get; set; } = new();
     public List<ReleaseSaleDetails> ReleaseSales { get; set; } = new();
 }
+
+public class BSCMainnetDefaults : OblivionDetails {
+    public BSCMainnetDefaults() {
+        ChainID = ChainID.BSC_Mainnet;
+        ReleaseStartingBlock = 16636640;
+    }
+}
+
+public class BSCTestnetDefaults : OblivionDetails {
+    public BSCTestnetDefaults() {
+        ChainID = ChainID.BSC_Testnet;
+        ReleaseStartingBlock = 17931172;
+    }
+}
+
+public class NervosTestnetDefaults : OblivionDetails {
+    public NervosTestnetDefaults() {
+        ChainID = ChainID.Nervos_Testnet;
+        ReleaseStartingBlock = 68736;
+    }
+}
