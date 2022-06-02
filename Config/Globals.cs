@@ -14,9 +14,6 @@ public static class Globals {
     public static int THROTTLE_WAIT = 500;
     public static int COIN_GECKO_THROTTLE_WAIT = 1500;
 
-    public static int REDUCED_IMAGE_WIDTH = 300;
-    public static int REDUCED_IMAGE_HEIGHT = 240;
-
     public static string IMAGE_CACHE_PREFIX = "https://api.oblivion.art/image-cache/";
 
     public const string IPFS_RAW_PREFIX = "ipfs://";
@@ -30,7 +27,7 @@ public static class Globals {
     public static readonly List<BlockchainDetails> Blockchains = new() {
         new() { ChainID = ChainID.BSC_Mainnet, Node = "https://bsc-dataseed.binance.org" },
         new() { ChainID = ChainID.BSC_Testnet, Node = "https://data-seed-prebsc-1-s1.binance.org:8545" },
-        new() { ChainID = ChainID.Nervos_Testnet, Node = "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev/" }
+        new() { ChainID = ChainID.Nervos_Testnet, Node = "https://godwoken-testnet-v1.ckbapp.dev" }
     };
 
     public static readonly List<PaymentDetails> Payments = new() {

@@ -30,12 +30,19 @@ public class DatabaseService {
         _lookup = lookup;
         _imageCache = imageCache;
         _logger = logger;
+        CheckDatabase();
+    }
 
-        _details = new List<OblivionDetails> {
-            new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 },
-            new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 },
-            new() { ChainID = ChainID.Nervos_Testnet, ReleaseStartingBlock = 208227 }
-        };
+    private void CheckDatabase() {
+        _details ??= new();
+        var checkBsc = _details.Find(a => a.ChainID == ChainID.BSC_Mainnet);
+        if (checkBsc == null) _details.Add(new() { ChainID = ChainID.BSC_Mainnet, ReleaseStartingBlock = 16636640 });
+        var checkBscTestnet = _details.Find(a => a.ChainID == ChainID.BSC_Testnet);
+        if (checkBscTestnet == null) _details.Add(new() { ChainID = ChainID.BSC_Testnet, ReleaseStartingBlock = 17931172 });
+        var checkNervosTestnet = _details.Find(a => a.ChainID == ChainID.Nervos_Testnet);
+        if (checkNervosTestnet == null) _details.Add(new() { ChainID = ChainID.Nervos_Testnet, ReleaseStartingBlock = 68736 });
+        var checkOldNervosTestnet = _details.Find(a => a.ChainID == ChainID.Old_Nervos_Testnet);
+        if (checkOldNervosTestnet != null) _details.Remove(checkOldNervosTestnet);
     }
 
     public async Task LoadDatabase() {
@@ -45,6 +52,7 @@ public class DatabaseService {
             await using var stream = File.OpenRead(Globals.DB_FILE);
             _details = await JsonSerializer.DeserializeAsync<List<OblivionDetails>>(stream);
             await stream.DisposeAsync();
+            CheckDatabase();
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured while loading database file");
         }

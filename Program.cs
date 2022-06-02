@@ -33,12 +33,6 @@ public static class Program {
         if (Environment.GetEnvironmentVariable("THROTTLE_WAIT") != null) 
             Globals.THROTTLE_WAIT = Convert.ToInt32(Environment.GetEnvironmentVariable("THROTTLE_WAIT"));
 
-        if (Environment.GetEnvironmentVariable("REDUCED_IMAGE_WIDTH") != null)
-            Globals.REDUCED_IMAGE_WIDTH = Convert.ToInt32(Environment.GetEnvironmentVariable("REDUCED_IMAGE_WIDTH"));
-
-        if (Environment.GetEnvironmentVariable("REDUCED_IMAGE_HEIGHT") != null)
-            Globals.REDUCED_IMAGE_HEIGHT = Convert.ToInt32(Environment.GetEnvironmentVariable("REDUCED_IMAGE_HEIGHT"));
-
         if (Environment.GetEnvironmentVariable("IMAGE_CACHE_PREFIX") != null)
             Globals.IMAGE_CACHE_PREFIX = Environment.GetEnvironmentVariable("IMAGE_CACHE_PREFIX");
             
