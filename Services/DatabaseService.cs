@@ -377,6 +377,11 @@ public class DatabaseService {
         var blocksToScan = lastBlock - set.LastReleaseScannedBlock;
 
         while (blocksToScan > 0) {
+            if (set.LastReleaseScannedBlock > lastBlock) {
+                set.LastReleaseScannedBlock = lastBlock;
+                break;
+            }
+            
             var start = set.LastReleaseScannedBlock;
             uint end;
 
