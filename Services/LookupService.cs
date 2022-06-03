@@ -10,6 +10,7 @@ using CoinGecko.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading;
 
 namespace OblivionAPI.Services; 
@@ -37,7 +38,10 @@ public class LookupService {
             var client = _httpFactory.CreateClient();
             var response = await client.SendAsync(request);
 
-            if (response.IsSuccessStatusCode) return await response.Content.ReadFromJsonAsync<NftMetadataResponse>();
+            if (response.IsSuccessStatusCode) {
+                var options = new JsonSerializerOptions { AllowTrailingCommas = true };
+                return await response.Content.ReadFromJsonAsync<NftMetadataResponse>(options);
+            }
 
             _logger.LogError("Error during NFT metadata lookup from: {Uri}  {Error}", uri, response.ReasonPhrase);
             return null;
