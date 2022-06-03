@@ -406,6 +406,8 @@ public class DatabaseService {
                 sale.PaymentToken = release?.PaymentToken;
                 set.ReleaseSales.Add(sale);
             }
+            
+            lastBlock = await _blockchain.GetLatestBlock(set.ChainID);
         }
     }
 
