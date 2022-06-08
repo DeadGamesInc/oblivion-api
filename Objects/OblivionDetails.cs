@@ -43,6 +43,6 @@ public class BSCTestnetDefaults : OblivionDetails {
 public class NervosTestnetDefaults : OblivionDetails {
     public NervosTestnetDefaults() {
         ChainID = ChainID.Nervos_Testnet;
-        ReleaseStartingBlock = 68736;
+        ReleaseStartingBlock = 87064;
     }
 }
