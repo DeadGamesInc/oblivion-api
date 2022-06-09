@@ -324,6 +324,7 @@ public abstract class OblivionController : ControllerBase {
     }
 
     [HttpGet]
+    [RestrictHost]
     [Route("refreshListing/{version:int}/{id}")]
     public async Task<ActionResult<ListingDetails>> RefreshListing(int version, uint id) {
         _logger.LogInformation("refreshListing for {ID} on {ChainID}", id, _chainID);
@@ -333,6 +334,7 @@ public abstract class OblivionController : ControllerBase {
     }
 
     [HttpGet]
+    [RestrictHost]
     [Route("refreshOffer/{version:int}/{listingId}/{paymentToken}/{id}")]
     public async Task<ActionResult<OfferDetails>> RefreshOffer(int version, uint listingId, string paymentToken, uint id) {
         _logger.LogInformation("refreshOffer {ListingID}:{PaymentToken}:{OfferID} on {ChainID}", listingId, paymentToken, id, _chainID);
@@ -342,6 +344,7 @@ public abstract class OblivionController : ControllerBase {
     }
 
     [HttpGet]
+    [RestrictHost]
     [Route("refreshCollection/{id}")]
     public async Task<ActionResult<CollectionDetails>> RefreshCollection(uint id) {
         _logger.LogInformation("refreshCollection {ID} on {ChainID}", id, _chainID);
@@ -351,6 +354,7 @@ public abstract class OblivionController : ControllerBase {
     }
 
     [HttpGet]
+    [RestrictHost]
     [Route("refreshRelease/{id}")]
     public async Task<ActionResult<ReleaseDetails>> RefreshRelease(uint id) {
         _logger.LogInformation("refreshRelease {ID} on {ChainId}", id, _chainID);
@@ -360,6 +364,7 @@ public abstract class OblivionController : ControllerBase {
     }
         
     [HttpGet]
+    [RestrictHost]
     [Route("refreshNft/{address}")]
     public async Task<ActionResult<NFTDetails>> RefreshNft(string address) {
         _logger.LogInformation("refreshNft for {Address} on {ChainID}", address, _chainID);
@@ -387,6 +392,7 @@ public abstract class OblivionController : ControllerBase {
     }
         
     [HttpGet]
+    [RestrictHost]
     [Route("getMonthlyVolume")]
     public async Task<ActionResult<SalesReport_Volume>> SalesReport_MonthlyVolume() {
         _logger.LogInformation("getMonthlyVolume on {ChainID}", _chainID);
@@ -396,6 +402,7 @@ public abstract class OblivionController : ControllerBase {
     }
         
     [HttpGet]
+    [RestrictHost]
     [Route("getPreviousMonthlyVolume")]
     public async Task<ActionResult<SalesReport_Volume>> SalesReport_PreviousMonthlyVolume() {
         _logger.LogInformation("getPreviousMonthlyVolume on {ChainID}", _chainID);
