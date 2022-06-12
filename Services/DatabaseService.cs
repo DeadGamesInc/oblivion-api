@@ -233,6 +233,10 @@ public class DatabaseService {
         return await RetrieveNFT(chainID, address, true);
     }
 
+    public async Task<NFTDetails> RecacheNft(ChainID chainID, string address) {
+        return await RetrieveNFT(chainID, address, true, true);
+    }
+
     public async Task HandleUpdate() {
         var tasks = _details.Select(set => Task.Run(async () => await HandleChainUpdate(set))).ToList();
         var run = Task.WhenAll(tasks);
@@ -502,7 +506,7 @@ public class DatabaseService {
         return collection;
     }
         
-    private async Task<NFTDetails> RetrieveNFT(ChainID chainID, string address, bool forceUpdate) {
+    private async Task<NFTDetails> RetrieveNFT(ChainID chainID, string address, bool forceUpdate, bool reCache = false) {
         var details = _details.Find(a => a.ChainID == chainID);
         if (details == null) return null;
 
@@ -515,7 +519,7 @@ public class DatabaseService {
 
         if (nft == null) return null;
 
-        if (nft is { Metadata: null } || !nft.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || forceUpdate) {
+        if (nft is { Metadata: null } || !nft.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || reCache) {
             var metadata = await _lookup.GetNFTMetadata(nft.URI ?? nft.BaseURI);
             if (metadata != null) {
                 nft.Metadata = new NFTMetadata(metadata);
@@ -529,7 +533,7 @@ public class DatabaseService {
         return nft;
     }
         
-    private async Task<NFTTokenIDInfo> RetrieveNFTTokenURI(ChainID chainID, string address, uint tokenID, bool forceUpdate) {
+    private async Task<NFTTokenIDInfo> RetrieveNFTTokenURI(ChainID chainID, string address, uint tokenID, bool forceUpdate, bool reCache = false) {
         var details = _details.Find(a => a.ChainID == chainID);
         if (details == null) return null;
 
@@ -551,7 +555,7 @@ public class DatabaseService {
 
         if (token == null) return null;
 
-        if (token is { Metadata: null } || !token.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || forceUpdate) {
+        if (token is { Metadata: null } || !token.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || reCache) {
             var metadata = await _lookup.GetNFTMetadata(token.URI);
             if (metadata != null) {
                 token.Metadata = new NFTMetadata(metadata);
