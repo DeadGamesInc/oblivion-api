@@ -519,11 +519,11 @@ public class DatabaseService {
 
         if (nft == null) return null;
 
-        if (nft is { Metadata: null } || !nft.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || reCache) {
+        if (nft is { Metadata: null } || !nft.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || forceUpdate) {
             var metadata = await _lookup.GetNFTMetadata(nft.URI ?? nft.BaseURI);
             if (metadata != null) {
                 nft.Metadata = new NFTMetadata(metadata);
-                var cache = await _imageCache.ImageCache(chainID, address, nft.Metadata.Image, 1, false);
+                var cache = await _imageCache.ImageCache(chainID, address, nft.Metadata.Image, 1, reCache);
                 nft.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
                 if (!string.IsNullOrEmpty(cache.LowResImage)) nft.CacheLowRes = cache.LowResImage;
                 else nft.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.Metadata.Image;
@@ -555,12 +555,12 @@ public class DatabaseService {
 
         if (token == null) return null;
 
-        if (token is { Metadata: null } || !token.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || reCache) {
+        if (token is { Metadata: null } || !token.CacheHighRes.StartsWith(Globals.IMAGE_CACHE_PREFIX) || forceUpdate) {
             var metadata = await _lookup.GetNFTMetadata(token.URI);
             if (metadata != null) {
                 token.Metadata = new NFTMetadata(metadata);
                 if (nft.Metadata?.Image != token.Metadata?.Image && token.Metadata != null) {
-                    var cache = await _imageCache.ImageCache(chainID, address, token.Metadata.Image, token.TokenId, false);
+                    var cache = await _imageCache.ImageCache(chainID, address, token.Metadata.Image, token.TokenId, reCache);
                     token.CacheHighRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.CacheHighRes;
                     if (!string.IsNullOrEmpty(cache.LowResImage)) token.CacheLowRes = cache.LowResImage;
                     else token.CacheLowRes = !string.IsNullOrEmpty(cache.HighResImage) ? cache.HighResImage : nft.CacheLowRes;
