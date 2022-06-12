@@ -16,8 +16,8 @@ public static class Program {
     public static async Task Main() {
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Debug)
-            .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Debug)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+            .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
             .WriteTo.Console()
             .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "api.log"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 10)
             .CreateLogger();
