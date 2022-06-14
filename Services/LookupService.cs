@@ -109,8 +109,12 @@ public class LookupService {
         try {
             _logger.LogInformation("Pinning IPFS CIDs");
             if (cids == null || !cids.Any()) return;
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("IPFS_BEARER"))) {
+                _logger.LogCritical("IPFS BEARER TOKEN NOT SET!!");
+                return;
+            }
             var client = _httpFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "4754d45d0b8c9fc9df0a4f4dca814c5e");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("IPFS_BEARER"));
             var cidList = new CidList { cids = cids };
             var content = new StringContent(JsonConvert.SerializeObject(cidList), Encoding.UTF8, "application/json");
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
