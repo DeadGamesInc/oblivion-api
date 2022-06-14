@@ -66,8 +66,16 @@ public class ImageCacheService {
             await highRes.DisposeAsync();
             content.Close();
             await content.DisposeAsync();
-                
+
             return Globals.IMAGE_CACHE_PREFIX + file;
+        }
+        catch (TaskCanceledException error) {
+            if (error.Message.Contains("The request was canceled due to the configured HttpClient.Timeout")) 
+                _logger.LogWarning("IPFS timeout looking up {Uri}", uri);
+            else
+                _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
+            
+            return null;
         }
         catch (Exception error) {
             _logger.LogError(error, "An exception occured while retrieving high res image from {Uri}", uri);

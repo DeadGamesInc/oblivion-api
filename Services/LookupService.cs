@@ -38,7 +38,9 @@ public class LookupService {
     public async Task<NftMetadataResponse> GetNFTMetadata(string uri) {
         try {
             _logger.LogDebug("Retrieving NFT metadata from: {Uri}", uri);
-            if (uri.Contains("test.com")) return null; // Ignore certain testnet URIs that are not valid anyways
+            // Ignore certain testnet URIs that are not valid anyways
+            if (string.IsNullOrEmpty(uri) || uri.Contains("test.com") || uri.Contains("dawdsawddasws"))
+                return null;
             uri = uri.Replace(Globals.IPFS_RAW_PREFIX, Globals.IPFS_HTTP_PREFIX);
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
             var client = _httpFactory.CreateClient();
@@ -51,7 +53,28 @@ public class LookupService {
 
             _logger.LogError("Error during NFT metadata lookup from: {Uri}  {Error}", uri, response.ReasonPhrase);
             return null;
-        } catch (Exception error) {
+        }
+        catch (System.Text.Json.JsonException) {
+            _logger.LogWarning("JSON deserialization failed for {Uri}", uri);
+            return null;
+        }
+        catch (TaskCanceledException error) {
+            if (error.Message.Contains("The request was canceled due to the configured HttpClient.Timeout")) 
+                _logger.LogWarning("IPFS timeout looking up {Uri}", uri);
+            else
+                _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
+            
+            return null;
+        }
+        catch (InvalidOperationException error) {
+            if (error.Message.Contains("An invalid request URI was provided")) 
+                _logger.LogWarning("An invalid URI provided for metadata lookup: {Uri}", uri);
+            else 
+                _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
+
+            return null;
+        } 
+        catch (Exception error) {
             _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
             return null;
         }
@@ -107,7 +130,7 @@ public class LookupService {
 
     public async Task PinIPFSCids(List<string> cids) {
         try {
-            _logger.LogInformation("Pinning IPFS CIDs");
+            _logger.LogDebug("Pinning IPFS CIDs");
             if (cids == null || !cids.Any()) return;
             if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("IPFS_BEARER"))) {
                 _logger.LogCritical("IPFS BEARER TOKEN NOT SET!!");

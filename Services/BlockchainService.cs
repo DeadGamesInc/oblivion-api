@@ -59,7 +59,8 @@ public class BlockchainService {
             nft.URI = await getURI.CallAsync<string>(1);
 
             return nft;
-        } catch (Exception error) {
+        }
+        catch (Exception error) {
             _logger.LogError(error, "An exception occured while getting NFT details for {Address} on {ChainID}", address, chainID);
             return nft;
         }
