@@ -254,6 +254,7 @@ public class DatabaseService {
         await UpdateSaleCollections(set);
         await UpdateReleaseSales(set);
         await UpdateListingCollections(set.ChainID);
+        await UpdateIPFS(set.ChainID);
     }
         
     private async Task UpdateBasicDetails(ChainID chainID) {
@@ -433,6 +434,12 @@ public class DatabaseService {
         });
     }
 
+    private async Task UpdateIPFS(ChainID chainId) {
+        var details = _details.Find(a => a.ChainID == chainId);
+        if (details == null) return;
+        await _lookup.PinIPFSCids((from nft in details.NFTs where nft.Metadata.Image.StartsWith(Globals.IPFS_RAW_PREFIX) select nft.Metadata.Image.Remove(0, Globals.IPFS_RAW_PREFIX.Length)).ToList());
+    }
+
     private async Task<ListingDetails> RetrieveListing(ChainID chainID, int version, uint id, bool forceUpdate) {
         var details = _details.Find(a => a.ChainID == chainID);
         if (details == null) return null;
@@ -606,6 +613,4 @@ public class DatabaseService {
 
         return (decimal)tokenAmount * price;
     }
-        
-        
 }

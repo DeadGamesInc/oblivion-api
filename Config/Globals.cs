@@ -17,7 +17,8 @@ public static class Globals {
     public static string IMAGE_CACHE_PREFIX = "https://api.oblivion.art/image-cache/";
 
     public const string IPFS_RAW_PREFIX = "ipfs://";
-    public const string IPFS_HTTP_PREFIX = "https://ipfs.io/ipfs/";
+    public const string IPFS_HTTP_PREFIX = "http://ipfs.deadgames.io:8080/ipfs/";
+    public const string IPFS_CID_POST_URL = "https://ipfs-pinning-service.deadgames.io/api/v1/pins/batch";
 
     private static readonly string BASE_DIR = AppDomain.CurrentDomain.BaseDirectory;
     public static readonly string WEB_ROOT = Path.Combine(BASE_DIR, "wwwroot");

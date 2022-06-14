@@ -5,13 +5,19 @@
  * 
  */
 
+using System.Linq;
+
 using CoinGecko.Clients;
 using CoinGecko.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
+
+using Newtonsoft.Json;
 
 namespace OblivionAPI.Services; 
 
@@ -96,6 +102,24 @@ public class LookupService {
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured while retrieving historical price for {ID}", id);
             return 0;
+        }
+    }
+
+    public async Task PinIPFSCids(List<string> cids) {
+        try {
+            _logger.LogInformation("Pinning IPFS CIDs");
+            if (cids == null || !cids.Any()) return;
+            var client = _httpFactory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "4754d45d0b8c9fc9df0a4f4dca814c5e");
+            var cidList = new CidList { cids = cids };
+            var content = new StringContent(JsonConvert.SerializeObject(cidList), Encoding.UTF8, "application/json");
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            _logger.LogDebug("A {Content}", await content.ReadAsStringAsync());
+            var result = await client.PostAsync(Globals.IPFS_CID_POST_URL, content);
+            if (!result.IsSuccessStatusCode) 
+                _logger.LogWarning("IPFS pin CIDs update failed: {Code} : {Reason}", result.StatusCode, result.ReasonPhrase);
+        } catch (Exception error) {
+            _logger.LogError(error, "An exception occured while pinning IPFS CIDs");
         }
     }
 }
