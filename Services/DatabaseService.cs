@@ -437,7 +437,8 @@ public class DatabaseService {
     private async Task UpdateIPFS(ChainID chainId) {
         var details = _details.Find(a => a.ChainID == chainId);
         if (details == null) return;
-        await _lookup.PinIPFSCids((from nft in details.NFTs where nft.Metadata.Image.StartsWith(Globals.IPFS_RAW_PREFIX) select nft.Metadata.Image.Remove(0, Globals.IPFS_RAW_PREFIX.Length)).ToList());
+        var cids = (from nft in details.NFTs where nft.Metadata?.Image != null where nft.Metadata.Image.StartsWith(Globals.IPFS_RAW_PREFIX) select nft.Metadata.Image.Remove(0, Globals.IPFS_RAW_PREFIX.Length)).ToList();
+        await _lookup.PinIPFSCids(cids);
     }
 
     private async Task<ListingDetails> RetrieveListing(ChainID chainID, int version, uint id, bool forceUpdate) {
