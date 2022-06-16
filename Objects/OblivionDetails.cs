@@ -61,7 +61,7 @@ public class OblivionDetails {
         builder.AppendLine($"Listing Collections Updated : {ListingCollectionsUpdated}");
         builder.AppendLine($"IPFS Updated                : {IPFSUpdated}");
         builder.AppendLine($"Last Release Scanned Block  : {LastReleaseScannedBlock}");
-        builder.AppendLine($"Last Sync Time              : {LastSyncTime}");
+        builder.AppendLine($"Last Sync Time (seconds)    : {LastSyncTime}");
     }
 }
 
