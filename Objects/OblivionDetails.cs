@@ -35,6 +35,8 @@ public class OblivionDetails {
     public bool ReleaseSalesUpdated;
     public bool ListingCollectionsUpdated;
     public bool IPFSUpdated;
+
+    public int LastSyncTime;
     
     public void ClearStatus() {
         ListingsUpdated = false;
@@ -48,8 +50,8 @@ public class OblivionDetails {
     }
 
     public void AddStatus(StringBuilder builder) {
-        builder.AppendLine($"Status For Chain            : {ChainID}");
-        builder.AppendLine("===============================================");
+        builder.AppendLine($"Sync Status For Chain {ChainID}");
+        builder.AppendLine("=======================================");
         builder.AppendLine($"Listings Updated            : {ListingsUpdated}");
         builder.AppendLine($"Collections Updated         : {CollectionsUpdated}");
         builder.AppendLine($"Releases Updated            : {ReleasesUpdated}");
@@ -59,7 +61,7 @@ public class OblivionDetails {
         builder.AppendLine($"Listing Collections Updated : {ListingCollectionsUpdated}");
         builder.AppendLine($"IPFS Updated                : {IPFSUpdated}");
         builder.AppendLine($"Last Release Scanned Block  : {LastReleaseScannedBlock}");
-        builder.AppendLine("");
+        builder.AppendLine($"Last Sync Time              : {LastSyncTime}");
     }
 }
 

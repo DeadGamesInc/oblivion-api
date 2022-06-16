@@ -29,10 +29,24 @@ public class LookupService {
     private readonly List<CachedPrice> _prices = new();
     private readonly List<HistoricalPrice> _priceHistory = new();
 
+    private int _generalErrors;
+    private int _ipfsTimeouts;
+    private int _exceptions;
+
     public LookupService(ILogger<LookupService> logger, IHttpClientFactory httpFactory) {
         _logger = logger;
         _httpFactory = httpFactory;
         _coinGecko = CoinGeckoClient.Instance;
+    }
+
+    public async Task AddStatus(StringBuilder builder) {
+        await Task.Run(() => {
+            builder.AppendLine("Lookup Service Errors");
+            builder.AppendLine("=====================");
+            builder.AppendLine($"IPFS Timeouts  : {_ipfsTimeouts}");
+            builder.AppendLine($"General Errors : {_generalErrors}");
+            builder.AppendLine($"Exceptions     : {_exceptions}");
+        });
     }
 
     public async Task<NftMetadataResponse> GetNFTMetadata(string uri) {
@@ -52,30 +66,41 @@ public class LookupService {
             }
 
             _logger.LogError("Error during NFT metadata lookup from: {Uri}  {Error}", uri, response.ReasonPhrase);
+            _generalErrors++;
             return null;
         }
         catch (System.Text.Json.JsonException) {
             _logger.LogWarning("JSON deserialization failed for {Uri}", uri);
+            _generalErrors++;
             return null;
         }
         catch (TaskCanceledException error) {
-            if (error.Message.Contains("The request was canceled due to the configured HttpClient.Timeout")) 
+            if (error.Message.Contains("The request was canceled due to the configured HttpClient.Timeout")) {
                 _logger.LogWarning("IPFS timeout looking up {Uri}", uri);
-            else
+                _ipfsTimeouts++;
+            }
+            else {
                 _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
+                _exceptions++;
+            }
             
             return null;
         }
         catch (InvalidOperationException error) {
-            if (error.Message.Contains("An invalid request URI was provided")) 
+            if (error.Message.Contains("An invalid request URI was provided")) {
                 _logger.LogWarning("An invalid URI provided for metadata lookup: {Uri}", uri);
-            else 
+                _generalErrors++;
+            }
+            else {
                 _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
+                _exceptions++;
+            }
 
             return null;
         } 
         catch (Exception error) {
             _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
+            _exceptions++;
             return null;
         }
     }
@@ -100,6 +125,7 @@ public class LookupService {
             return check.Price;
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured while retrieving crypto price for {ID}", id);
+            _exceptions++;
             return 0;
         }
     }
@@ -124,6 +150,7 @@ public class LookupService {
             return price.Price;
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured while retrieving historical price for {ID}", id);
+            _exceptions++;
             return 0;
         }
     }
@@ -147,6 +174,7 @@ public class LookupService {
                 _logger.LogWarning("IPFS pin CIDs update failed: {Code} : {Reason}", result.StatusCode, result.ReasonPhrase);
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured while pinning IPFS CIDs");
+            _exceptions++;
         }
     }
 }

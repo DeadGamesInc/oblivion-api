@@ -6,12 +6,12 @@
  */
 
 using System.Net.Http;
+using System.Text;
+
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Processing;
 
 namespace OblivionAPI.Services; 
 
@@ -19,9 +19,21 @@ public class ImageCacheService {
     private readonly ILogger<ImageCacheService> _logger;
     private readonly IHttpClientFactory _httpFactory;
 
+    private int _exceptions;
+    private int _ipfsTimeouts;
+    private int _conversionErrors;
+
     public ImageCacheService(ILogger<ImageCacheService> logger, IHttpClientFactory httpFactory) {
         _logger = logger;
         _httpFactory = httpFactory;
+    }
+
+    public async Task AddStatus(StringBuilder builder) {
+        builder.AppendLine("Image Cache Service Errors");
+        builder.AppendLine("==========================");
+        builder.AppendLine($"IPFS Timeouts     : {_ipfsTimeouts}");
+        builder.AppendLine($"Conversion Errors : {_conversionErrors}");
+        builder.AppendLine($"Exceptions        : {_exceptions}");
     }
 
     public async Task<ImageCacheDetails> ImageCache(ChainID chainID, string nft, string uri, uint id, bool clearExisting) {
@@ -46,6 +58,7 @@ public class ImageCacheService {
             return details;
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured performing image caching for {Nft} on {ChainID}", nft, chainID);
+            _exceptions++;
             return details;
         }
     }
@@ -70,15 +83,20 @@ public class ImageCacheService {
             return Globals.IMAGE_CACHE_PREFIX + file;
         }
         catch (TaskCanceledException error) {
-            if (error.Message.Contains("The request was canceled due to the configured HttpClient.Timeout")) 
+            if (error.Message.Contains("The request was canceled due to the configured HttpClient.Timeout")) {
                 _logger.LogWarning("IPFS timeout looking up {Uri}", uri);
-            else
+                _ipfsTimeouts++;
+            }
+            else {
                 _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
+                _exceptions++;
+            }
             
             return null;
         }
         catch (Exception error) {
             _logger.LogError(error, "An exception occured while retrieving high res image from {Uri}", uri);
+            _exceptions++;
             return null;
         }
     }
@@ -111,12 +129,18 @@ public class ImageCacheService {
             reader.Dispose();
             return Globals.IMAGE_CACHE_PREFIX + name;
         } catch (UnknownImageFormatException error) {
-            if (error.Message.Contains("Image cannot be loaded")) 
+            if (error.Message.Contains("Image cannot be loaded")) {
                 _logger.LogWarning("Failed to generate low res image for {HighResFile} - Likely a movie image", highResFile);
-            else _logger.LogCritical(error, "Error triggers: {Error}", error.Message);
+                _conversionErrors++;
+            }
+            else {
+                _logger.LogCritical(error, "Error triggers: {Error}", error.Message);
+                _exceptions++;
+            }
             return null;
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured converting low res image for {HighResFile}", highResFile);
+            _exceptions++;
             return null;
         }
     }

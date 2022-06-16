@@ -58,6 +58,7 @@ public class ListingDetails {
     }
 
     public void Update(ListingDetails response) {
+        if (response == null) return;
         ClosedBlock = response.ClosedBlock;
         SaleState = response.SaleState;
         LastRetrieved = DateTime.Now;

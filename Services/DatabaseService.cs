@@ -25,10 +25,13 @@ public class DatabaseService {
     private readonly ILogger<DatabaseService> _logger;
 
     private List<OblivionDetails> _details;
-    private DateTime _initializationTime;
+    private readonly DateTime _initializationTime;
     private DateTime _lastSyncCompleteTime;
     private DateTime _currentSyncStarted;
     private TimeSpan _lastSyncTime;
+    private Stopwatch _currentSyncTimer;
+    private uint _totalScanSeconds;
+    private int _totalScans;
 
     public DatabaseService(BlockchainService blockchain, LookupService lookup, ImageCacheService imageCache, ILogger<DatabaseService> logger) {
         _blockchain = blockchain;
@@ -36,6 +39,7 @@ public class DatabaseService {
         _imageCache = imageCache;
         _logger = logger;
         _initializationTime = DateTime.Now;
+        _currentSyncTimer = new Stopwatch();
         CheckDatabase();
     }
 
@@ -95,19 +99,53 @@ public class DatabaseService {
     }
 
     public async Task<string> GetStatus() {
-        return await Task.Run(() => {
-            var status = new StringBuilder();
-            status.AppendLine("API Status");
+        long averageScan = 0;
+        if (_totalScans > 0) averageScan = _totalScanSeconds / _totalScans;
+
+        long databaseSize = 0;
+        if (File.Exists(Globals.DB_FILE)) {
+            var database = new FileInfo(Globals.DB_FILE);
+            databaseSize = database.Length;
+        }
+
+        long imageCacheSize = 0;
+        if (Directory.Exists(Globals.IMAGE_CACHE_DIR)) {
+            var directory = new DirectoryInfo(Globals.IMAGE_CACHE_DIR);
+            var files = directory.GetFiles();
+            imageCacheSize += files.Sum(file => file.Length);
+        }
+        
+        var status = new StringBuilder();
+        status.AppendLine("API Status");
+        status.AppendLine("");
+        status.AppendLine($"Initialization Time            : {_initializationTime}");
+        status.AppendLine($"Initial Sync Complete          : {InitialSyncComplete}");
+        status.AppendLine("");
+        status.AppendLine($"Current Sync Started           : {_currentSyncStarted}");
+        status.AppendLine($"Current Sync Elapsed (seconds) : {(int) _currentSyncTimer.Elapsed.TotalSeconds}");
+        status.AppendLine("");
+        status.AppendLine($"Last Sync Complete             : {_lastSyncCompleteTime}");
+        status.AppendLine($"Last Sync Time (seconds)       : {(int) _lastSyncTime.TotalSeconds}");
+        status.AppendLine($"Average Sync Time (seconds)    : {(int) averageScan}");
+        status.AppendLine("");
+        status.AppendLine($"Database Size                  : {$"{databaseSize:n0}".PadLeft(15, ' ')} bytes");
+        status.AppendLine($"Image Cache Size               : {$"{imageCacheSize:n0}".PadLeft(15, ' ')} bytes");
+        status.AppendLine("");
+        
+        await _blockchain.AddStatus(status);
+        
+        await _lookup.AddStatus(status);
+        status.AppendLine("");
+
+        await _imageCache.AddStatus(status);
+        status.AppendLine("");
+        
+        foreach (var set in _details) {
+            set.AddStatus(status);
             status.AppendLine("");
-            status.AppendLine($"Initialization Time      : {_initializationTime}");
-            status.AppendLine($"Initial Sync Complete    : {InitialSyncComplete}");
-            status.AppendLine($"Last Sync Complete       : {_lastSyncCompleteTime}");
-            status.AppendLine($"Last Sync Time (seconds) : {_lastSyncTime.TotalSeconds}");
-            status.AppendLine($"Current Sync Started     : {_currentSyncStarted}");
-            status.AppendLine("");
-            foreach (var set in _details) set.AddStatus(status);
-            return status.ToString();
-        });
+        }
+        
+        return status.ToString();
     }
     
     public async Task<uint> TotalListings(ChainID chainID) {
@@ -261,19 +299,24 @@ public class DatabaseService {
 
     public async Task HandleUpdate() {
         _currentSyncStarted = DateTime.Now;
-        var stopwatch = Stopwatch.StartNew();
+        _currentSyncTimer.Start();
         foreach (var set in _details) set.ClearStatus();
         var tasks = _details.Select(set => Task.Run(async () => await HandleChainUpdate(set))).ToList();
         var run = Task.WhenAll(tasks);
         await run.WaitAsync(new CancellationToken());
         await SaveDatabase();
+        _currentSyncTimer.Stop();
         InitialSyncComplete = true;
         _lastSyncCompleteTime = DateTime.Now;
-        _lastSyncTime = stopwatch.Elapsed;
+        _lastSyncTime = _currentSyncTimer.Elapsed;
         _currentSyncStarted = DateTime.MinValue;
+        _totalScans++;
+        _totalScanSeconds += (uint) _currentSyncTimer.Elapsed.TotalSeconds;
+        _currentSyncTimer.Reset();
     }
 
     private async Task HandleChainUpdate(OblivionDetails set) {
+        var stopwatch = Stopwatch.StartNew();
         await UpdateBasicDetails(set.ChainID);
         await UpdateListings(set);
         await UpdateCollections(set);
@@ -283,6 +326,7 @@ public class DatabaseService {
         await UpdateReleaseSales(set);
         await UpdateListingCollections(set.ChainID);
         await UpdateIPFS(set.ChainID);
+        _details.Find(a => a.ChainID == set.ChainID)!.LastSyncTime = (int) stopwatch.Elapsed.TotalSeconds;
     }
         
     private async Task UpdateBasicDetails(ChainID chainID) {
@@ -439,7 +483,7 @@ public class DatabaseService {
             var sales = await _blockchain.CheckReleaseSales(set.ChainID, start, end);
             set.LastReleaseScannedBlock = end;
                 
-            if (sales == null) return;
+            if (sales == null) break;
             if (sales.Count == 0) continue;
 
             foreach (var sale in sales) {
