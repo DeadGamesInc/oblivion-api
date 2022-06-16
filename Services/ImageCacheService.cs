@@ -20,8 +20,16 @@ public class ImageCacheService {
     private readonly IHttpClientFactory _httpFactory;
 
     private int _exceptions;
+    private int _previousExceptions;
+    private int _totalExceptions;
+    
     private int _ipfsTimeouts;
+    private int _previousIpfsTimeouts;
+    private int _totalIpfsTimeouts;
+    
     private int _conversionErrors;
+    private int _previousConversionErrors;
+    private int _totalConversionErrors;
 
     public ImageCacheService(ILogger<ImageCacheService> logger, IHttpClientFactory httpFactory) {
         _logger = logger;
@@ -31,12 +39,15 @@ public class ImageCacheService {
     public async Task AddStatus(StringBuilder builder) {
         builder.AppendLine("Image Cache Service Errors");
         builder.AppendLine("==========================");
-        builder.AppendLine($"IPFS Timeouts     : {_ipfsTimeouts}");
-        builder.AppendLine($"Conversion Errors : {_conversionErrors}");
-        builder.AppendLine($"Exceptions        : {_exceptions}");
+        builder.AppendLine($"IPFS Timeouts     : {_ipfsTimeouts} | {_previousIpfsTimeouts} | {_totalIpfsTimeouts}");
+        builder.AppendLine($"Conversion Errors : {_conversionErrors} | {_previousConversionErrors} | {_totalConversionErrors}");
+        builder.AppendLine($"Exceptions        : {_exceptions} | {_previousExceptions} | {_totalExceptions}");
     }
 
     public void ResetCounters() {
+        _previousExceptions = _exceptions;
+        _previousIpfsTimeouts = _ipfsTimeouts;
+        _previousConversionErrors = _conversionErrors;
         _exceptions = 0;
         _ipfsTimeouts = 0;
         _conversionErrors = 0;
@@ -65,6 +76,7 @@ public class ImageCacheService {
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured performing image caching for {Nft} on {ChainID}", nft, chainID);
             _exceptions++;
+            _totalExceptions++;
             return details;
         }
     }
@@ -92,10 +104,12 @@ public class ImageCacheService {
             if (error.Message.Contains("The request was canceled due to the configured HttpClient.Timeout")) {
                 _logger.LogWarning("IPFS timeout looking up {Uri}", uri);
                 _ipfsTimeouts++;
+                _totalIpfsTimeouts++;
             }
             else {
                 _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
                 _exceptions++;
+                _totalExceptions++;
             }
             
             return null;
@@ -103,6 +117,7 @@ public class ImageCacheService {
         catch (Exception error) {
             _logger.LogError(error, "An exception occured while retrieving high res image from {Uri}", uri);
             _exceptions++;
+            _totalExceptions++;
             return null;
         }
     }
@@ -138,15 +153,18 @@ public class ImageCacheService {
             if (error.Message.Contains("Image cannot be loaded")) {
                 _logger.LogWarning("Failed to generate low res image for {HighResFile} - Likely a movie image", highResFile);
                 _conversionErrors++;
+                _totalConversionErrors++;
             }
             else {
                 _logger.LogCritical(error, "Error triggers: {Error}", error.Message);
                 _exceptions++;
+                _totalExceptions++;
             }
             return null;
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured converting low res image for {HighResFile}", highResFile);
             _exceptions++;
+            _totalExceptions++;
             return null;
         }
     }

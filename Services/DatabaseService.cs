@@ -34,7 +34,7 @@ public class DatabaseService {
     private int _totalScans;
     private bool _updateCancelling;
     private int _cancelledSyncs;
-    private string _incompleteSyncs;
+    private string _incompleteSyncs = "none";
 
     public DatabaseService(BlockchainService blockchain, LookupService lookup, ImageCacheService imageCache, ILogger<DatabaseService> logger) {
         _blockchain = blockchain;
@@ -88,6 +88,7 @@ public class DatabaseService {
                 _logger.LogCritical("Update loop being cancelled due to length of sync");
                 _updateCancelling = true;
                 _cancelledSyncs++;
+                _incompleteSyncs = "";
                 foreach (var chain in _details.Where(chain => !chain.LastSyncComplete)) {
                     _incompleteSyncs += $"{chain.ChainID} ";
                 }
@@ -155,7 +156,9 @@ public class DatabaseService {
         status.AppendLine($"Database Size                  : {$"{databaseSize:n0}".PadLeft(15, ' ')} bytes");
         status.AppendLine($"Image Cache Size               : {$"{imageCacheSize:n0}".PadLeft(15, ' ')} bytes");
         status.AppendLine("");
-        
+        status.AppendLine("Errors Output As : CurrentHour | PreviousHour | Total");
+        status.AppendLine("");
+
         await _blockchain.AddStatus(status);
         
         await _lookup.AddStatus(status);
@@ -323,7 +326,6 @@ public class DatabaseService {
 
     public async Task HandleUpdate() {
         _updateCancelling = false;
-        _incompleteSyncs = "none";
         _currentSyncStarted = DateTime.Now;
         _currentSyncTimer.Start();
         foreach (var set in _details) set.ClearStatus();
@@ -339,6 +341,7 @@ public class DatabaseService {
         _totalScans++;
         _totalScanSeconds += (uint) _currentSyncTimer.Elapsed.TotalSeconds;
         _currentSyncTimer.Reset();
+        if (!_updateCancelling) _incompleteSyncs = "none";
     }
 
     private async Task HandleChainUpdate(OblivionDetails set) {

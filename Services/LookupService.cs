@@ -30,8 +30,16 @@ public class LookupService {
     private readonly List<HistoricalPrice> _priceHistory = new();
 
     private int _generalErrors;
+    private int _previousGeneralErrors;
+    private int _totalGeneralErrors;
+    
     private int _ipfsTimeouts;
+    private int _previousIpfsTimeouts;
+    private int _totalIpfsTimeouts;
+    
     private int _exceptions;
+    private int _previousExceptions;
+    private int _totalExceptions;
 
     public LookupService(ILogger<LookupService> logger, IHttpClientFactory httpFactory) {
         _logger = logger;
@@ -43,13 +51,16 @@ public class LookupService {
         await Task.Run(() => {
             builder.AppendLine("Lookup Service Errors");
             builder.AppendLine("=====================");
-            builder.AppendLine($"IPFS Timeouts  : {_ipfsTimeouts}");
-            builder.AppendLine($"General Errors : {_generalErrors}");
-            builder.AppendLine($"Exceptions     : {_exceptions}");
+            builder.AppendLine($"IPFS Timeouts  : {_ipfsTimeouts} | {_previousIpfsTimeouts} | {_totalIpfsTimeouts}");
+            builder.AppendLine($"General Errors : {_generalErrors} | {_previousGeneralErrors} | {_totalGeneralErrors}");
+            builder.AppendLine($"Exceptions     : {_exceptions} | {_previousExceptions} | {_totalExceptions}");
         });
     }
 
     public void ResetCounters() {
+        _previousGeneralErrors = _generalErrors;
+        _previousIpfsTimeouts = _ipfsTimeouts;
+        _previousExceptions = _exceptions;
         _generalErrors = 0;
         _ipfsTimeouts = 0;
         _exceptions = 0;
@@ -73,21 +84,25 @@ public class LookupService {
 
             _logger.LogError("Error during NFT metadata lookup from: {Uri}  {Error}", uri, response.ReasonPhrase);
             _generalErrors++;
+            _totalGeneralErrors++;
             return null;
         }
         catch (System.Text.Json.JsonException) {
             _logger.LogWarning("JSON deserialization failed for {Uri}", uri);
             _generalErrors++;
+            _totalGeneralErrors++;
             return null;
         }
         catch (TaskCanceledException error) {
             if (error.Message.Contains("The request was canceled due to the configured HttpClient.Timeout")) {
                 _logger.LogWarning("IPFS timeout looking up {Uri}", uri);
                 _ipfsTimeouts++;
+                _totalIpfsTimeouts++;
             }
             else {
                 _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
                 _exceptions++;
+                _totalExceptions++;
             }
             
             return null;
@@ -96,10 +111,12 @@ public class LookupService {
             if (error.Message.Contains("An invalid request URI was provided")) {
                 _logger.LogWarning("An invalid URI provided for metadata lookup: {Uri}", uri);
                 _generalErrors++;
+                _totalGeneralErrors++;
             }
             else {
                 _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
                 _exceptions++;
+                _totalExceptions++;
             }
 
             return null;
@@ -107,6 +124,7 @@ public class LookupService {
         catch (Exception error) {
             _logger.LogError(error, "Exception during NFT metadata lookup from: {Uri}", uri);
             _exceptions++;
+            _totalExceptions++;
             return null;
         }
     }
@@ -132,6 +150,7 @@ public class LookupService {
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured while retrieving crypto price for {ID}", id);
             _exceptions++;
+            _totalExceptions++;
             return 0;
         }
     }
@@ -157,6 +176,7 @@ public class LookupService {
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured while retrieving historical price for {ID}", id);
             _exceptions++;
+            _totalExceptions++;
             return 0;
         }
     }
@@ -176,11 +196,15 @@ public class LookupService {
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             _logger.LogDebug("A {Content}", await content.ReadAsStringAsync());
             var result = await client.PostAsync(Globals.IPFS_CID_POST_URL, content);
-            if (!result.IsSuccessStatusCode) 
+            if (!result.IsSuccessStatusCode) {
                 _logger.LogWarning("IPFS pin CIDs update failed: {Code} : {Reason}", result.StatusCode, result.ReasonPhrase);
+                _generalErrors++;
+                _totalGeneralErrors++;
+            }
         } catch (Exception error) {
             _logger.LogError(error, "An exception occured while pinning IPFS CIDs");
             _exceptions++;
+            _totalExceptions++;
         }
     }
 }
