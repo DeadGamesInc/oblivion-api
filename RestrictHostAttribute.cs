@@ -18,6 +18,6 @@ public class RestrictHostAttribute : Attribute, IAuthorizationFilter {
         var allowedHosts = allowedHostsDetails.Split(',').ToList();
         
         var host = context.HttpContext.Request.Host.Host.ToLower();
-        if (!allowedHosts.Contains(host)) context.Result = new BadRequestResult();  
+        if (!allowedHosts.Contains(host)) context.Result = new BadRequestObjectResult(host);
     }
 }
