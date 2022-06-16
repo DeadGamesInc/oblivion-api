@@ -14,19 +14,7 @@ namespace OblivionAPI.Services;
 
 public class BlockchainService {
     private readonly ILogger<BlockchainService> _logger;
-    private readonly Web3 _bsc;
-    private readonly Web3 _bscTestnet;
-    private readonly Web3 _nervosTestnet;
-
-    public BlockchainService(ILogger<BlockchainService> logger) {
-        _logger = logger;
-        var bsc = Globals.Blockchains.Find(a => a.ChainID == ChainID.BSC_Mainnet);
-        if (bsc != null) _bsc = new Web3(bsc.Node) { TransactionManager = { UseLegacyAsDefault = true } };
-        var bscTestnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.BSC_Testnet);
-        if (bscTestnet != null) _bscTestnet = new Web3(bscTestnet.Node) { TransactionManager = { UseLegacyAsDefault = true } };
-        var nervosTestnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.Nervos_Testnet);
-        if (nervosTestnet != null) _nervosTestnet = new Web3(nervosTestnet.Node) { TransactionManager = { UseLegacyAsDefault = true } };
-    }
+    public BlockchainService(ILogger<BlockchainService> logger) { _logger = logger; }
 
     public async Task<NFTDetails> GetNFTDetails(ChainID chainID, string address) {
         var nft = new NFTDetails { Address = address };
@@ -57,7 +45,7 @@ public class BlockchainService {
             
             var getURI = contract.GetFunction("tokenURI");
             nft.URI = await getURI.CallAsync<string>(1);
-
+            
             return nft;
         }
         catch (Exception error) {
@@ -405,11 +393,20 @@ public class BlockchainService {
     }
 
     private Web3 GetWeb3(ChainID chainID) {
-        return chainID switch {
-            ChainID.BSC_Mainnet => _bsc,
-            ChainID.BSC_Testnet => _bscTestnet,
-            ChainID.Nervos_Testnet => _nervosTestnet,
-            _ => null
-        };
+        switch (chainID) {
+            case ChainID.BSC_Mainnet:
+                var bsc = Globals.Blockchains.Find(a => a.ChainID == ChainID.BSC_Mainnet);
+                return bsc != null ? new Web3(bsc.Node) { TransactionManager = { UseLegacyAsDefault = true } } : null;
+            
+            case ChainID.BSC_Testnet:
+                var bscTestnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.BSC_Testnet);
+                return bscTestnet != null ? new Web3(bscTestnet.Node) { TransactionManager = { UseLegacyAsDefault = true } } : null;
+            
+            case ChainID.Nervos_Testnet:
+                var nervosTestnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.Nervos_Testnet);
+                return nervosTestnet != null ? new Web3(nervosTestnet.Node) { TransactionManager = { UseLegacyAsDefault = true } } : null;
+
+            default: return null;
+        }
     }
 }
