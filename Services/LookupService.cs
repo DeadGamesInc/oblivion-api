@@ -49,6 +49,12 @@ public class LookupService {
         });
     }
 
+    public void ResetCounters() {
+        _generalErrors = 0;
+        _ipfsTimeouts = 0;
+        _exceptions = 0;
+    }
+
     public async Task<NftMetadataResponse> GetNFTMetadata(string uri) {
         try {
             _logger.LogDebug("Retrieving NFT metadata from: {Uri}", uri);

@@ -36,6 +36,12 @@ public class ImageCacheService {
         builder.AppendLine($"Exceptions        : {_exceptions}");
     }
 
+    public void ResetCounters() {
+        _exceptions = 0;
+        _ipfsTimeouts = 0;
+        _conversionErrors = 0;
+    }
+
     public async Task<ImageCacheDetails> ImageCache(ChainID chainID, string nft, string uri, uint id, bool clearExisting) {
         if (clearExisting) ClearCachedImages(nft, id);
         var details = new ImageCacheDetails();

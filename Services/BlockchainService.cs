@@ -38,6 +38,14 @@ public class BlockchainService {
         });
     }
 
+    public void ResetCounters() {
+        foreach (var chain in _errors) {
+            chain.Timeouts = 0;
+            chain.ContractErrors = 0;
+            chain.Exceptions = 0;
+        }
+    }
+
     public async Task<NFTDetails> GetNFTDetails(ChainID chainID, string address) {
         var nft = new NFTDetails { Address = address };
 

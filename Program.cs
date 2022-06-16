@@ -18,8 +18,8 @@ public static class Program {
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
             .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
-            .WriteTo.Console()
-            .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "api.log"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 10)
+            .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3} {Message}{NewLine}{Exception}")
+            .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "api.log"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 10, outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3} {Message}{NewLine}{Exception}")
             .CreateLogger();
 
         Globals.LISTEN_PORT = Environment.GetEnvironmentVariable("PORT") ?? "5001";
@@ -42,7 +42,7 @@ public static class Program {
         var host = CreateHost();
 
         try {
-            Log.Logger.Information("Dead Games API is starting");
+            Log.Logger.Information("Oblivion API is starting");
             await host.RunAsync();
         } catch (Exception error) {
             Log.Logger.Error(error, "An exception occured in host execution");
