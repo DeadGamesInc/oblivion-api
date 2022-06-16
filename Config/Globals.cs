@@ -13,6 +13,8 @@ public static class Globals {
     public static uint REFRESH_TIME = 300000;
     public static int THROTTLE_WAIT = 500;
     public static int COIN_GECKO_THROTTLE_WAIT = 1500;
+    
+    public const int MAX_BLOCKS_SCANNED_PER_UPDATE = 50000;
 
     public static string IMAGE_CACHE_PREFIX = "https://api.oblivion.art/image-cache/";
 
