@@ -39,6 +39,7 @@ public class OfferDetails {
     }
 
     public void Update(OfferDetails response) {
+        if (response == null) return;
         Claimed = response.Claimed;
         EndBlock = response.EndBlock;
         LastRetrieved = DateTime.Now;
