@@ -67,6 +67,30 @@ public class BlockchainService {
         }
     }
 
+    private void HandleTimeout(ChainID chainID, string message) {
+        _logger.LogWarning("{Message} on {ChainID}", message, chainID);
+        _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
+        _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
+    }
+
+    private void HandleContractError(ChainID chainID, Exception error, string message) {
+        _logger.LogWarning(error, "{Message} on {ChainID}", message, chainID);
+        _errors.Find(a => a.ChainID == chainID)!.ContractErrors++;
+        _errors.Find(a => a.ChainID == chainID)!.TotalContractErrors++;
+    }
+    
+    private void HandleContractError(ChainID chainID, string message) {
+        _logger.LogWarning("{Message} on {ChainID}", message, chainID);
+        _errors.Find(a => a.ChainID == chainID)!.ContractErrors++;
+        _errors.Find(a => a.ChainID == chainID)!.TotalContractErrors++;
+    }
+
+    private void HandleException(ChainID chainID, Exception error, string message) {
+        _logger.LogError(error, "{Message} on {ChainID}", message, chainID);
+        _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
+        _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
+    }
+
     public async Task<NFTDetails> GetNFTDetails(ChainID chainID, string address) {
         var timer = Stopwatch.StartNew();
         var nft = new NFTDetails { Address = address };
@@ -93,47 +117,46 @@ public class BlockchainService {
                 nft.BaseURI = await getBaseURI.CallAsync<string>();
             }
             catch (Exception error) {
-                _logger.LogDebug(error, "Failed to set baseURI");
-                _errors.Find(a => a.ChainID == chainID)!.ContractErrors++;
+                HandleContractError(chainID, error, "Failed to set baseURI");
             }
 
             var getURI = contract.GetFunction("tokenURI");
             nft.URI = await getURI.CallAsync<string>(1);
-
-            return nft;
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting NFT details");
+            else 
+                HandleException(chainID, error, $"An exception occured while getting NFT details for {address}");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting NFT details");
+            else 
+                HandleException(chainID, error, $"An exception occured while getting NFT details for {address}");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting NFT details on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return nft;
+            HandleTimeout(chainID, "Web3 connection timed out getting NFT details");
         }
         catch (Nethereum.ABI.FunctionEncoding.SmartContractRevertException error) {
             if (error.Message.Contains("ERC721Metadata: URI query for nonexistent token"))
-                _logger.LogWarning("ERC721 nonexistent token revert on Token ID 0 for {Address} on {ChainID}", address,
-                    chainID);
+                HandleContractError(chainID, $"ERC721 nonexistent token revert on Token ID 0 for {address}");
             else
-                _logger.LogError(error, "A smart contract exception occurred on token ID 0 for {Address} on {ChainID}",
-                    address, chainID);
-
-            _errors.Find(a => a.ChainID == chainID)!.ContractErrors++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalContractErrors++;
-            return nft;
+                HandleContractError(chainID, error, $"A smart contract exception occurred on token ID 0 for {address}");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while getting NFT details for {Address} on {ChainID}", address,
-                chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return nft;
+            HandleException(chainID, error, $"An exception occured while getting NFT details for {address}");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+        
+        return nft;
     }
 
     public async Task<string> GetNFTTokenURI(ChainID chainID, string address, uint tokenID) {
         var timer = Stopwatch.StartNew();
+        string uri = null;
         
         try {
             _logger.LogDebug("Retrieving details for tokenID {TokenID} on NFT {Address} on {ChainID}", tokenID, address,
@@ -144,29 +167,36 @@ public class BlockchainService {
 
             var contract = web3.Eth.GetContract(ABIs.OblivionNFT, address);
             var getURI = contract.GetFunction("tokenURI");
-            var uri = await getURI.CallAsync<string>(tokenID);
-
-            return uri;
+            uri = await getURI.CallAsync<string>(tokenID);
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting NFT token details");
+            else 
+                HandleException(chainID, error, $"An exception occured while getting NFT token details for {address}");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting NFT token details");
+            else 
+                HandleException(chainID, error, $"An exception occured while getting NFT token details for {address}");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting NFT token details on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return null;
+            HandleTimeout(chainID, "Web3 connection timed out getting NFT token details");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while getting NFT token details on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return null;
+            HandleException(chainID, error, $"An exception occured while getting NFT token details for {address}");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+        
+        return uri;
     }
 
     public async Task<uint> GetTotalListings(ChainID chainID, int version) {
         var timer = Stopwatch.StartNew();
+        uint total = 0;
         
         try {
             _logger.LogDebug("Retrieving total listings for {ChainID}:V{Version}", chainID, version);
@@ -178,29 +208,36 @@ public class BlockchainService {
 
             var contract = web3.Eth.GetContract(ABIs.OblivionMarket, address);
             var getFunction = contract.GetFunction("totalListings");
-            var result = await getFunction.CallAsync<uint>();
-
-            return result;
+            total = await getFunction.CallAsync<uint>();
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting total listings");
+            else 
+                HandleException(chainID, error, "An exception occured while getting total listings");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting total listings");
+            else 
+                HandleException(chainID, error, "An exception occured while getting total listings");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting total listings on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return 0;
+            HandleTimeout(chainID, "Web3 connection timed out getting total listings");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while getting the total listings on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return 0;
+            HandleException(chainID, error, "An exception occured while getting the total listings");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return total;
     }
 
     public async Task<uint> GetListingOffers(ChainID chainID, int version, uint id, string paymentToken) {
         var timer = Stopwatch.StartNew();
+        uint offers = 0;
         
         try {
             _logger.LogDebug("Retrieving offer count for listing {ID} with payment token {PaymentToken} on {ChainID}:V{Version}", id,
@@ -213,29 +250,36 @@ public class BlockchainService {
 
             var contract = web3.Eth.GetContract(ABIs.OblivionMarket, address);
             var getFunction = contract.GetFunction("totalOffers");
-            var result = await getFunction.CallAsync<uint>(id, paymentToken);
-
-            return result;
-        } 
+            offers = await getFunction.CallAsync<uint>(id, paymentToken);
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting offer count");
+            else 
+                HandleException(chainID, error, "An exception occured while getting offer count");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting offer count");
+            else
+                HandleException(chainID, error, "An exception occured while getting offer count");
+        }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting offer count on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return 0;
+            HandleTimeout(chainID, "Web3 connection timed out getting offer count");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while getting offer count for {ListingID} on {ChainID}", id, chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return 0;
+            HandleException(chainID, error, $"An exception occured while getting offer count for {id}");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return offers;
     }
 
     public async Task<ListingDetails> GetListing(ChainID chainID, int version, uint id) {
         var timer = Stopwatch.StartNew();
+        ListingDetails listing = null;
         
         try {
             _logger.LogDebug("Retrieving listing details for {ID} on {ChainID}:V{Version}", id, chainID, version);
@@ -248,28 +292,36 @@ public class BlockchainService {
             var contract = web3.Eth.GetContract(ABIs.OblivionMarket, address);
             var getFunction = contract.GetFunction("listings");
             var result = await getFunction.CallAsync<ListingResponse>(id);
-                
-            return new ListingDetails(id, version, result);
+            listing = new ListingDetails(id, version, result);
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting listing");
+            else 
+                HandleException(chainID, error, $"An exception occured retrieving details for listing id {id}");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting listing");
+            else 
+                HandleException(chainID, error, $"An exception occured retrieving details for listing id {id}");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting listing on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return null;
+            HandleTimeout(chainID, "Web3 connection timed out getting listing");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured retrieving details for listing id {ID} on {ChainID}", id, chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return null;
+            HandleException(chainID, error, $"An exception occured retrieving details for listing id {id}");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return listing;
     }
 
     public async Task<OfferDetails> GetOffer(ChainID chainID, int version, uint listingID, string paymentToken, uint offerID) {
         var timer = Stopwatch.StartNew();
+        OfferDetails offer = null;
         
         try {
             _logger.LogDebug("Retrieving details for offer {PaymentToken}:{OfferID} on listing {ListingID} on {ChainID}:V{Version}", paymentToken, offerID, listingID, chainID, version);
@@ -282,24 +334,31 @@ public class BlockchainService {
             var getFunction = contract.GetFunction("offers");
 
             var result = await getFunction.CallAsync<OfferResponse>(listingID, paymentToken, offerID);
-                
-            return new OfferDetails(paymentToken, listingID, offerID, version, result);
+            offer = new OfferDetails(paymentToken, listingID, offerID, version, result);
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting offer details");
+            else 
+                HandleException(chainID, error, "An exception occured while getting offer details");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting offer details");
+            else 
+                HandleException(chainID, error, "An exception occured while getting offer details");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting offer details on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return null;
+            HandleTimeout(chainID, "Web3 connection timed out getting offer details");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured retrieving details for offer {PaymentToken}:{OfferID} on listing {ListingID} on {ChainID}", paymentToken, offerID, listingID, chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return null;
+            HandleException(chainID, error, $"An exception occured retrieving details for offer {paymentToken}:{offerID} on listing {listingID}");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return offer;
     }
 
     public async Task<List<ReleaseSaleDetails>> CheckReleaseSales(ChainID chainID, uint startBlock, uint endBlock) {
@@ -355,27 +414,35 @@ public class BlockchainService {
 
             return sales;
         }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting release sales");
+            else 
+                HandleException(chainID, error, "An exception occured while getting release sales");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting release sales");
+            else 
+                HandleException(chainID, error, "An exception occured while getting release sales");
+        }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting release sales on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return null;
+            HandleTimeout(chainID, "Web3 connection timed out getting release sales");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while checking release sales");
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return null;
+            HandleException(chainID, error, "An exception occured while getting release sales");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+        
+        return null;
     }
 
     public async Task<OblivionSaleInformation> CheckSale(ChainID chainID, int version, ListingDetails listing) {
         var timer = Stopwatch.StartNew();
         _logger.LogDebug("Checking sale details for {ListingID} on {ChainID}:V{Version}", listing.ID, chainID, version);
-            
+
         try {
             Thread.Sleep(Globals.THROTTLE_WAIT);
             var address = GetMarketAddress(chainID, version);
@@ -392,8 +459,10 @@ public class BlockchainService {
             var buyFilter = buyEvent.CreateFilterInput(block, block);
             var buyEvents = await buyEvent.GetAllChangesDefaultAsync(buyFilter);
 
+            OblivionSaleInformation sale;
+            
             if (buyEvents.Count > 0) {
-                var sale = new OblivionSaleInformation {
+                sale = new OblivionSaleInformation {
                     ID = listing.ID, Version = version, Amount = buyEvents[0].Event[3].Result.ToString(), Buyer = buyEvents[0].Event[1].Result.ToString(),
                     Seller = listing.Owner, PaymentToken = buyEvents[0].Event[2].Result.ToString(), CreateDate = await GetBlockTimestamp(chainID, createBlock), SaleDate = await GetBlockTimestamp(chainID, block), TxHash = buyEvents[0].Log.TransactionHash
                 };
@@ -405,7 +474,7 @@ public class BlockchainService {
             var offerEvents = await offerEvent.GetAllChangesDefaultAsync(offerFilter);
 
             if (offerEvents.Count > 0) {
-                var sale = new OblivionSaleInformation {
+                sale = new OblivionSaleInformation {
                     ID = listing.ID, Version = version, Amount = offerEvents[0].Event[4].Result.ToString(), Buyer = offerEvents[0].Event[2].Result.ToString(),
                     Seller = listing.Owner, PaymentToken = offerEvents[0].Event[1].Result.ToString(), CreateDate = await GetBlockTimestamp(chainID, createBlock), SaleDate = await GetBlockTimestamp(chainID, block), TxHash = offerEvents[0].Log.TransactionHash
                 };
@@ -417,29 +486,35 @@ public class BlockchainService {
             var cancelEvents = await cancelEvent.GetAllChangesDefaultAsync(cancelFilter);
 
             if (cancelEvents.Count > 0) {
-                var sale = new OblivionSaleInformation {
+                sale = new OblivionSaleInformation {
                     ID = listing.ID, Cancelled = true, TxHash = cancelEvents[0].Log.TransactionHash
                 };
                 return sale;
             }
-                
-            return null;
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting sales information");
+            else 
+                HandleException(chainID, error, "An exception occured while getting sales information");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting sales information");
+            else 
+                HandleException(chainID, error, "An exception occured while getting sales information");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting sales information on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return null;
+            HandleTimeout(chainID, "Web3 connection timed out getting sales information");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while checking sales information for {ListingID} on {ChainID}", chainID, listing.ID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return null;
+            HandleException(chainID, error, "An exception occured while getting sales information");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return null;
     }
 
     private async Task<DateTime> GetBlockTimestamp(ChainID chainID, BlockParameter block) {
@@ -453,52 +528,70 @@ public class BlockchainService {
             var txBlock = await web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(block);
             return DateTimeOffset.FromUnixTimeSeconds((long)txBlock.Timestamp.Value).UtcDateTime;
         }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting block timestamp");
+            else 
+                HandleException(chainID, error, "An exception occured while getting block timestamp");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting block timestamp");
+            else 
+                HandleException(chainID, error, "An exception occured while getting block timestamp");
+        }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting block timestamp on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return DateTime.MinValue;
+            HandleTimeout(chainID, "Web3 connection timed out getting block timestamp");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while getting block timestamp on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return DateTime.MinValue;
+            HandleException(chainID, error, "An exception occured while getting block timestamp");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+        
+        return DateTime.MinValue;
     }
 
     public async Task<uint> GetLatestBlock(ChainID chainID) {
         var timer = Stopwatch.StartNew();
+        uint blockNumber = 0;
         
         try {
             var web3 = GetWeb3(chainID);
             if (web3 == null) return 0;
 
             var block = await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-            return Convert.ToUInt32(block.ToString());
+            blockNumber = Convert.ToUInt32(block.ToString());
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting latest block number");
+            else 
+                HandleException(chainID, error, "An exception occured while getting latest block number");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting latest block number");
+            else 
+                HandleException(chainID, error, "An exception occured while getting latest block number");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting latest block number on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return 0;
+            HandleTimeout(chainID, "Web3 connection timed out getting latest block number");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while retrieving the latest block number on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return 0;
+            HandleException(chainID, error, "An exception occured while getting latest block number");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return blockNumber;
     }
 
     public async Task<uint> GetTotalCollections(ChainID chainID) {
         var timer = Stopwatch.StartNew();
+        uint total = 0;
         
         try {
             _logger.LogDebug("Getting total collections on {ChainID}", chainID);
@@ -509,26 +602,36 @@ public class BlockchainService {
 
             var contract = web3.Eth.GetContract(ABIs.OblivionCollectionManager, address);
             var getFunction = contract.GetFunction("totalCollections");
-            return await getFunction.CallAsync<uint>();
+            total = await getFunction.CallAsync<uint>();
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting total collections");
+            else 
+                HandleException(chainID, error, "An exception occured while getting total collections");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting total collections");
+            else 
+                HandleException(chainID, error, "An exception occured while getting total collections");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting total collections on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return 0;
+            HandleTimeout(chainID, "Web3 connection timed out getting total collections");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while retrieving total collections on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return 0;
+            HandleException(chainID, error, "An exception occured while getting total collections");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return total;
     }
 
     public async Task<CollectionDetails> GetCollection(ChainID chainID, uint id) {
         var timer = Stopwatch.StartNew();
+        CollectionDetails details = null;
         
         try {
             _logger.LogDebug("Getting collection details for {ID} on {ChainID}", id, chainID);
@@ -551,29 +654,36 @@ public class BlockchainService {
             var description = await metaDataFunction.CallAsync<string>(id, "description");
             var banner = await metaDataFunction.CallAsync<string>(id, "banner");
                 
-            var collection = new CollectionDetails(id, result, name, image, description, banner, nfts.NFTs.ToArray());
-                
-            return collection;
+            details = new CollectionDetails(id, result, name, image, description, banner, nfts.NFTs.ToArray());
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting collection details");
+            else 
+                HandleException(chainID, error, "An exception occured while getting collection details");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting collection details");
+            else 
+                HandleException(chainID, error, "An exception occured while getting collection details");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting collection details on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return null;
+            HandleTimeout(chainID, "Web3 connection timed out getting collection details");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while retrieving collection {ID} on {ChainID}", id, chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return null;
+            HandleException(chainID, error, "An exception occured while getting collection details");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return details;
     }
         
     public async Task<uint> GetTotalReleases(ChainID chainID) {
         var timer = Stopwatch.StartNew();
+        uint total = 0;
         
         try {
             _logger.LogDebug("Getting total releases on {ChainID}", chainID);
@@ -584,27 +694,36 @@ public class BlockchainService {
 
             var contract = web3.Eth.GetContract(ABIs.OblivionMintingService, address);
             var getFunction = contract.GetFunction("totalListings");
-            return await getFunction.CallAsync<uint>();
+            total = await getFunction.CallAsync<uint>();
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting total releases");
+            else 
+                HandleException(chainID, error, "An exception occured while getting total releases");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting total releases");
+            else 
+                HandleException(chainID, error, "An exception occured while getting total releases");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting total releases on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return 0;
+            HandleTimeout(chainID, "Web3 connection timed out getting total releases");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while retrieving total releases on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return 0;
+            HandleException(chainID, error, "An exception occured while getting total releases");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return total;
     }
         
     public async Task<ReleaseDetails> GetRelease(ChainID chainID, uint id) {
         var timer = Stopwatch.StartNew();
+        ReleaseDetails details = null;
         
         try {
             _logger.LogDebug("Retrieving release details for {ID} on {ChainID}", id, chainID);
@@ -621,23 +740,31 @@ public class BlockchainService {
             var getTreasury = contract.GetFunction("getTreasuryInfo");
             var treasury = await getTreasury.CallAsync<ReleaseTreasuryDetailsResponse>(id);
                 
-            return new ReleaseDetails(id, result, treasury);
+            details = new ReleaseDetails(id, result, treasury);
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting release details");
+            else 
+                HandleException(chainID, error, "An exception occured while getting release details");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting release details");
+            else 
+                HandleException(chainID, error, "An exception occured while getting release details");
         }
         catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
-            _logger.LogWarning("Web3 connection timed out getting release details on {ChainID}", chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Timeouts++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalTimeouts++;
-            return null;
+            HandleTimeout(chainID, "Web3 connection timed out getting release details");
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured retrieving details for release id {ID} on {ChainID}", id, chainID);
-            _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
-            _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
-            return null;
+            HandleException(chainID, error, "An exception occured while getting release details");
         }
         finally {
             _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         }
+
+        return details;
     }
 
     private static string GetMarketAddress(ChainID chainID, int version) {
