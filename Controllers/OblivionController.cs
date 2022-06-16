@@ -374,6 +374,7 @@ public abstract class OblivionController : ControllerBase {
     }
 
     [HttpGet]
+    [RestrictHost]
     [Route("recacheNft/{address}")]
     public async Task<ActionResult<NFTDetails>> RecacheNft(string address) {
         _logger.LogInformation("recacheNft for {Address} on {ChainID}", address, _chainID);
@@ -418,5 +419,14 @@ public abstract class OblivionController : ControllerBase {
         var report = await _reports.SalesReport_PreviousMonthVolume(_chainID);
         if (report == null) return NotFound(null);
         return Ok(report);
+    }
+
+    [HttpGet]
+    [RestrictHost]
+    [Route("status")]
+    public async Task<ActionResult<string>> Status() {
+        _logger.LogInformation("status request");
+        var status = await _database.GetStatus();
+        return Ok(status);
     }
 }

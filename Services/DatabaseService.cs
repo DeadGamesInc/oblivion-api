@@ -8,6 +8,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using Microsoft.Extensions.Logging;
@@ -24,12 +25,17 @@ public class DatabaseService {
     private readonly ILogger<DatabaseService> _logger;
 
     private List<OblivionDetails> _details;
+    private DateTime _initializationTime;
+    private DateTime _lastSyncCompleteTime;
+    private DateTime _currentSyncStarted;
+    private TimeSpan _lastSyncTime;
 
     public DatabaseService(BlockchainService blockchain, LookupService lookup, ImageCacheService imageCache, ILogger<DatabaseService> logger) {
         _blockchain = blockchain;
         _lookup = lookup;
         _imageCache = imageCache;
         _logger = logger;
+        _initializationTime = DateTime.Now;
         CheckDatabase();
     }
 
@@ -64,7 +70,7 @@ public class DatabaseService {
                 break;
         }
     }
-
+    
     public async Task LoadDatabase() {
         DatabaseLoaded = true;
         try {
@@ -87,7 +93,23 @@ public class DatabaseService {
             _logger.LogError(error, "An exception occured while saving database file");
         }
     }
-        
+
+    public async Task<string> GetStatus() {
+        return await Task.Run(() => {
+            var status = new StringBuilder();
+            status.AppendLine("API Status");
+            status.AppendLine("");
+            status.AppendLine($"Initialization Time      : {_initializationTime}");
+            status.AppendLine($"Initial Sync Complete    : {InitialSyncComplete}");
+            status.AppendLine($"Last Sync Complete       : {_lastSyncCompleteTime}");
+            status.AppendLine($"Last Sync Time (seconds) : {_lastSyncTime.TotalSeconds}");
+            status.AppendLine($"Current Sync Started     : {_currentSyncStarted}");
+            status.AppendLine("");
+            foreach (var set in _details) set.AddStatus(status);
+            return status.ToString();
+        });
+    }
+    
     public async Task<uint> TotalListings(ChainID chainID) {
         return await Task.Run(() => {
             var details = _details.Find(a => a.ChainID == chainID);
@@ -238,11 +260,17 @@ public class DatabaseService {
     }
 
     public async Task HandleUpdate() {
+        _currentSyncStarted = DateTime.Now;
+        var stopwatch = Stopwatch.StartNew();
+        foreach (var set in _details) set.ClearStatus();
         var tasks = _details.Select(set => Task.Run(async () => await HandleChainUpdate(set))).ToList();
         var run = Task.WhenAll(tasks);
         await run.WaitAsync(new CancellationToken());
-        InitialSyncComplete = true;
         await SaveDatabase();
+        InitialSyncComplete = true;
+        _lastSyncCompleteTime = DateTime.Now;
+        _lastSyncTime = stopwatch.Elapsed;
+        _currentSyncStarted = DateTime.MinValue;
     }
 
     private async Task HandleChainUpdate(OblivionDetails set) {
@@ -284,6 +312,8 @@ public class DatabaseService {
 
             await UpdateListingExtraDetails(set.ChainID, listing);
         }
+
+        _details.Find(a => a.ChainID == set.ChainID)!.ListingsUpdated = true;
     }
 
     private async Task UpdateListingExtraDetails(ChainID chainId, ListingDetails listing) {
@@ -330,6 +360,7 @@ public class DatabaseService {
         var collections = _details.Find(a => a.ChainID == set.ChainID)?.Collections.ToList();
         if (collections == null) return;
         foreach (var nft in collections.SelectMany(collection => collection.Nfts)) await RetrieveNFT(set.ChainID, nft, false);
+        _details.Find(a => a.ChainID == set.ChainID)!.CollectionsUpdated = true;
     }
 
     private async Task UpdateReleases(OblivionDetails set) {
@@ -342,6 +373,7 @@ public class DatabaseService {
         var releases = _details.Find(a => a.ChainID == set.ChainID)?.Releases.ToList();
         if (releases == null) return;
         foreach (var release in releases) await RetrieveNFT(set.ChainID, release.NFT, false);
+        _details.Find(a => a.ChainID == set.ChainID)!.ReleasesUpdated = true;
     }
 
     private async Task FinalizeListing(ChainID chainID, int version, ListingDetails listing) {
@@ -356,7 +388,7 @@ public class DatabaseService {
         }
     }
 
-    private static async Task UpdateSaleCollections(OblivionDetails set) {
+    private async Task UpdateSaleCollections(OblivionDetails set) {
         await Task.Run(() => {
             var sales = set.Listings.Where(a => a.WasSold);
             foreach (var sale in sales) {
@@ -364,6 +396,7 @@ public class DatabaseService {
                 if (collection != null) sale.SaleInformation.CollectionId = collection.ID;
                 else sale.SaleInformation.CollectionId = null;
             }
+            _details.Find(a => a.ChainID == set.ChainID)!.SaleCollectionsUpdated = true;
         });
     }
 
@@ -372,6 +405,7 @@ public class DatabaseService {
         if (payments == null) return;
 
         foreach (var token in payments.PaymentTokens) token.Price = await _lookup.GetCurrentPrice(token.CoinGeckoKey);
+        _details.Find(a => a.ChainID == chainID)!.TokensUpdated = true;
     }
 
     private async Task UpdateReleaseSales(OblivionDetails set) {
@@ -414,6 +448,8 @@ public class DatabaseService {
             
             lastBlock = await _blockchain.GetLatestBlock(set.ChainID);
         }
+        
+        _details.Find(a => a.ChainID == set.ChainID)!.ReleaseSalesUpdated = true;
     }
 
     private async Task UpdateListingCollections(ChainID chainID) {
@@ -431,6 +467,8 @@ public class DatabaseService {
                 }
                 
             }
+            
+            _details.Find(a => a.ChainID == chainID)!.ListingCollectionsUpdated = true;
         });
     }
 
@@ -439,6 +477,7 @@ public class DatabaseService {
         if (details == null) return;
         var cids = (from nft in details.NFTs where nft.Metadata?.Image != null where nft.Metadata.Image.StartsWith(Globals.IPFS_RAW_PREFIX) select nft.Metadata.Image.Remove(0, Globals.IPFS_RAW_PREFIX.Length)).ToList();
         await _lookup.PinIPFSCids(cids);
+        _details.Find(a => a.ChainID == chainId)!.IPFSUpdated = true;
     }
 
     private async Task<ListingDetails> RetrieveListing(ChainID chainID, int version, uint id, bool forceUpdate) {

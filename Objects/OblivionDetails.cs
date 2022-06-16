@@ -5,6 +5,8 @@
  * 
  */
 
+using System.Text;
+
 namespace OblivionAPI.Objects; 
 
 [Serializable]
@@ -24,6 +26,41 @@ public class OblivionDetails {
     public List<ReleaseDetails> Releases { get; set; } = new();
     public List<NFTDetails> NFTs { get; set; } = new();
     public List<ReleaseSaleDetails> ReleaseSales { get; set; } = new();
+
+    public bool ListingsUpdated;
+    public bool CollectionsUpdated;
+    public bool ReleasesUpdated;
+    public bool TokensUpdated;
+    public bool SaleCollectionsUpdated;
+    public bool ReleaseSalesUpdated;
+    public bool ListingCollectionsUpdated;
+    public bool IPFSUpdated;
+    
+    public void ClearStatus() {
+        ListingsUpdated = false;
+        CollectionsUpdated = false;
+        ReleasesUpdated = false;
+        TokensUpdated = false;
+        SaleCollectionsUpdated = false;
+        ReleaseSalesUpdated = false;
+        ListingCollectionsUpdated = false;
+        IPFSUpdated = false;
+    }
+
+    public void AddStatus(StringBuilder builder) {
+        builder.AppendLine($"Status For Chain            : {ChainID}");
+        builder.AppendLine("===============================================");
+        builder.AppendLine($"Listings Updated            : {ListingsUpdated}");
+        builder.AppendLine($"Collections Updated         : {CollectionsUpdated}");
+        builder.AppendLine($"Releases Updated            : {ReleasesUpdated}");
+        builder.AppendLine($"Tokens Updated              : {TokensUpdated}");
+        builder.AppendLine($"Sales Collections Updated   : {SaleCollectionsUpdated}");
+        builder.AppendLine($"Release Sales Updated       : {ReleaseSalesUpdated}");
+        builder.AppendLine($"Listing Collections Updated : {ListingCollectionsUpdated}");
+        builder.AppendLine($"IPFS Updated                : {IPFSUpdated}");
+        builder.AppendLine($"Last Release Scanned Block  : {LastReleaseScannedBlock}");
+        builder.AppendLine("");
+    }
 }
 
 public class BSCMainnetDefaults : OblivionDetails {
