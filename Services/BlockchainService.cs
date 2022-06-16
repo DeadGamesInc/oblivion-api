@@ -5,6 +5,7 @@
  * 
  */
 
+using System.Diagnostics;
 using System.Text;
 
 using Microsoft.Extensions.Logging;
@@ -16,17 +17,29 @@ namespace OblivionAPI.Services;
 
 public class BlockchainService {
     private readonly List<BlockchainErrors> _errors;
+    private readonly List<BlockchainStats> _stats;
     private readonly ILogger<BlockchainService> _logger;
 
     public BlockchainService(ILogger<BlockchainService> logger) {
         _logger = logger;
         _errors = new List<BlockchainErrors> { new BSCMainnetErrors(), new BSCTestnetErrors(), new NervosTestnetErrors() };
+        _stats = new List<BlockchainStats> { new BSCMainnetStats(), new BSCTestnetStats(), new NervosTestnetStats() };
     }
 
     public async Task AddStatus(StringBuilder builder) {
         await Task.Run(() => {
-            builder.AppendLine("Web3 Errors");
-            builder.AppendLine("===========");
+            builder.AppendLine("Blockchain Service Stats (This Hour)");
+            builder.AppendLine("====================================");
+            
+            foreach (var chain in _stats) {
+                builder.AppendLine($"Chain                       : {chain.ChainID}");
+                builder.AppendLine($"Operations                  : {chain.Operations}");
+                builder.AppendLine($"Average Operation Time (ms) : {chain.AverageOperationTime}");
+                builder.AppendLine("");
+            }
+            
+            builder.AppendLine("Blockchain Service Errors");
+            builder.AppendLine("=========================");
             foreach (var chain in _errors) {
                 builder.AppendLine($"Chain           : {chain.ChainID}");
                 builder.AppendLine($"Timeouts        : {chain.Timeouts} | {chain.PreviousTimeouts} | {chain.TotalTimeouts}");
@@ -46,9 +59,16 @@ public class BlockchainService {
             chain.ContractErrors = 0;
             chain.Exceptions = 0;
         }
+
+        foreach (var chain in _stats) {
+            chain.Operations = 0;
+            chain.TotalOperationTime = 0;
+            chain.AverageOperationTime = 0;
+        }
     }
 
     public async Task<NFTDetails> GetNFTDetails(ChainID chainID, string address) {
+        var timer = Stopwatch.StartNew();
         var nft = new NFTDetails { Address = address };
 
         try {
@@ -89,24 +109,32 @@ public class BlockchainService {
             return nft;
         }
         catch (Nethereum.ABI.FunctionEncoding.SmartContractRevertException error) {
-            if (error.Message.Contains("ERC721Metadata: URI query for nonexistent token")) 
-                _logger.LogWarning("ERC721 nonexistent token revert on Token ID 0 for {Address} on {ChainID}", address, chainID);
-            else 
-                _logger.LogError(error, "A smart contract exception occurred on token ID 0 for {Address} on {ChainID}", address, chainID);
-            
+            if (error.Message.Contains("ERC721Metadata: URI query for nonexistent token"))
+                _logger.LogWarning("ERC721 nonexistent token revert on Token ID 0 for {Address} on {ChainID}", address,
+                    chainID);
+            else
+                _logger.LogError(error, "A smart contract exception occurred on token ID 0 for {Address} on {ChainID}",
+                    address, chainID);
+
             _errors.Find(a => a.ChainID == chainID)!.ContractErrors++;
             _errors.Find(a => a.ChainID == chainID)!.TotalContractErrors++;
             return nft;
         }
         catch (Exception error) {
-            _logger.LogError(error, "An exception occured while getting NFT details for {Address} on {ChainID}", address, chainID);
+            _logger.LogError(error, "An exception occured while getting NFT details for {Address} on {ChainID}", address,
+                chainID);
             _errors.Find(a => a.ChainID == chainID)!.Exceptions++;
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return nft;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<string> GetNFTTokenURI(ChainID chainID, string address, uint tokenID) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             _logger.LogDebug("Retrieving details for tokenID {TokenID} on NFT {Address} on {ChainID}", tokenID, address,
                 chainID);
@@ -132,9 +160,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return null;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<uint> GetTotalListings(ChainID chainID, int version) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             _logger.LogDebug("Retrieving total listings for {ChainID}:V{Version}", chainID, version);
 
@@ -161,9 +194,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return 0;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<uint> GetListingOffers(ChainID chainID, int version, uint id, string paymentToken) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             _logger.LogDebug("Retrieving offer count for listing {ID} with payment token {PaymentToken} on {ChainID}:V{Version}", id,
                 paymentToken, chainID, version);
@@ -191,9 +229,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return 0;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<ListingDetails> GetListing(ChainID chainID, int version, uint id) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             _logger.LogDebug("Retrieving listing details for {ID} on {ChainID}:V{Version}", id, chainID, version);
 
@@ -220,9 +263,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return null;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<OfferDetails> GetOffer(ChainID chainID, int version, uint listingID, string paymentToken, uint offerID) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             _logger.LogDebug("Retrieving details for offer {PaymentToken}:{OfferID} on listing {ListingID} on {ChainID}:V{Version}", paymentToken, offerID, listingID, chainID, version);
             var address = GetMarketAddress(chainID, version);
@@ -249,10 +297,15 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return null;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<List<ReleaseSaleDetails>> CheckReleaseSales(ChainID chainID, uint startBlock, uint endBlock) {
+        var timer = Stopwatch.StartNew();
         _logger.LogDebug("Checking release sales from block {StartBlock} to block {EndBlock} on {ChainID}", startBlock, endBlock, chainID);
+        
         try {
             Thread.Sleep(Globals.THROTTLE_WAIT);
             var sales = new List<ReleaseSaleDetails>();
@@ -314,9 +367,13 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return null;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<OblivionSaleInformation> CheckSale(ChainID chainID, int version, ListingDetails listing) {
+        var timer = Stopwatch.StartNew();
         _logger.LogDebug("Checking sale details for {ListingID} on {ChainID}:V{Version}", listing.ID, chainID, version);
             
         try {
@@ -380,9 +437,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return null;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     private async Task<DateTime> GetBlockTimestamp(ChainID chainID, BlockParameter block) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             var web3 = GetWeb3(chainID);
 
@@ -403,9 +465,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return DateTime.MinValue;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<uint> GetLatestBlock(ChainID chainID) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             var web3 = GetWeb3(chainID);
             if (web3 == null) return 0;
@@ -425,9 +492,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return 0;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<uint> GetTotalCollections(ChainID chainID) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             _logger.LogDebug("Getting total collections on {ChainID}", chainID);
             var address = Contracts.OblivionCollectionManager.GetAddress(chainID);
@@ -450,9 +522,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return 0;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     public async Task<CollectionDetails> GetCollection(ChainID chainID, uint id) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             _logger.LogDebug("Getting collection details for {ID} on {ChainID}", id, chainID);
             var address = Contracts.OblivionCollectionManager.GetAddress(chainID);
@@ -490,9 +567,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return null;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
         
     public async Task<uint> GetTotalReleases(ChainID chainID) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             _logger.LogDebug("Getting total releases on {ChainID}", chainID);
             var address = Contracts.OblivionMintingService.GetAddress(chainID);
@@ -516,9 +598,14 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return 0;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
         
     public async Task<ReleaseDetails> GetRelease(ChainID chainID, uint id) {
+        var timer = Stopwatch.StartNew();
+        
         try {
             _logger.LogDebug("Retrieving release details for {ID} on {ChainID}", id, chainID);
 
@@ -548,6 +635,9 @@ public class BlockchainService {
             _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
             return null;
         }
+        finally {
+            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        }
     }
 
     private static string GetMarketAddress(ChainID chainID, int version) {
@@ -558,7 +648,7 @@ public class BlockchainService {
         };
     }
 
-    private Web3 GetWeb3(ChainID chainID) {
+    private static Web3 GetWeb3(ChainID chainID) {
         switch (chainID) {
             case ChainID.BSC_Mainnet:
                 var bsc = Globals.Blockchains.Find(a => a.ChainID == ChainID.BSC_Mainnet);
