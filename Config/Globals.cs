@@ -16,6 +16,9 @@ public static class Globals {
     
     public const int MAX_BLOCKS_SCANNED_PER_UPDATE = 50000;
 
+    public const int MAX_INITIAL_SYNC_TIME = 1800;
+    public const int MAX_SYNC_TIME = 600;
+
     public static string IMAGE_CACHE_PREFIX = "https://api.oblivion.art/image-cache/";
 
     public const string IPFS_RAW_PREFIX = "ipfs://";

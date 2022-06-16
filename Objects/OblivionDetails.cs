@@ -37,6 +37,7 @@ public class OblivionDetails {
     public bool IPFSUpdated;
 
     public int LastSyncTime;
+    public bool LastSyncComplete;
     
     public void ClearStatus() {
         ListingsUpdated = false;
@@ -47,6 +48,7 @@ public class OblivionDetails {
         ReleaseSalesUpdated = false;
         ListingCollectionsUpdated = false;
         IPFSUpdated = false;
+        LastSyncComplete = false;
     }
 
     public void AddStatus(StringBuilder builder) {

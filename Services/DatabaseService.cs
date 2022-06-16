@@ -29,9 +29,12 @@ public class DatabaseService {
     private DateTime _lastSyncCompleteTime;
     private DateTime _currentSyncStarted;
     private TimeSpan _lastSyncTime;
-    private Stopwatch _currentSyncTimer;
+    private readonly Stopwatch _currentSyncTimer;
     private uint _totalScanSeconds;
     private int _totalScans;
+    private bool _updateCancelling;
+    private int _cancelledSyncs;
+    private string _incompleteSyncs;
 
     public DatabaseService(BlockchainService blockchain, LookupService lookup, ImageCacheService imageCache, ILogger<DatabaseService> logger) {
         _blockchain = blockchain;
@@ -73,6 +76,25 @@ public class DatabaseService {
                 _details.Add(new NervosTestnetDefaults());
                 break;
         }
+    }
+
+    private bool CheckCancel() {
+        if (_updateCancelling) return true;
+        var syncTime = (DateTime.Now - _currentSyncStarted).TotalSeconds;
+        
+        switch (InitialSyncComplete) {
+            case false when syncTime > Globals.MAX_INITIAL_SYNC_TIME:
+            case true when syncTime > Globals.MAX_SYNC_TIME:
+                _logger.LogCritical("Update loop being cancelled due to length of sync");
+                _updateCancelling = true;
+                _cancelledSyncs++;
+                foreach (var chain in _details.Where(chain => !chain.LastSyncComplete)) {
+                    _incompleteSyncs += $"{chain.ChainID} ";
+                }
+                break;
+        }
+        
+        return _updateCancelling;
     }
     
     public async Task LoadDatabase() {
@@ -120,6 +142,7 @@ public class DatabaseService {
         status.AppendLine("");
         status.AppendLine($"Initialization Time            : {_initializationTime}");
         status.AppendLine($"Initial Sync Complete          : {InitialSyncComplete}");
+        status.AppendLine($"Incomplete Syncs               : {_incompleteSyncs}");
         status.AppendLine("");
         status.AppendLine($"Current Sync Started           : {_currentSyncStarted}");
         status.AppendLine($"Current Sync Elapsed (seconds) : {(int) _currentSyncTimer.Elapsed.TotalSeconds}");
@@ -127,6 +150,7 @@ public class DatabaseService {
         status.AppendLine($"Last Sync Complete             : {_lastSyncCompleteTime}");
         status.AppendLine($"Last Sync Time (seconds)       : {(int) _lastSyncTime.TotalSeconds}");
         status.AppendLine($"Average Sync Time (seconds)    : {(int) averageScan}");
+        status.AppendLine($"Cancelled Syncs                : {_cancelledSyncs}");
         status.AppendLine("");
         status.AppendLine($"Database Size                  : {$"{databaseSize:n0}".PadLeft(15, ' ')} bytes");
         status.AppendLine($"Image Cache Size               : {$"{imageCacheSize:n0}".PadLeft(15, ' ')} bytes");
@@ -298,6 +322,8 @@ public class DatabaseService {
     }
 
     public async Task HandleUpdate() {
+        _updateCancelling = false;
+        _incompleteSyncs = "none";
         _currentSyncStarted = DateTime.Now;
         _currentSyncTimer.Start();
         foreach (var set in _details) set.ClearStatus();
@@ -327,6 +353,7 @@ public class DatabaseService {
         await UpdateListingCollections(set.ChainID);
         await UpdateIPFS(set.ChainID);
         _details.Find(a => a.ChainID == set.ChainID)!.LastSyncTime = (int) stopwatch.Elapsed.TotalSeconds;
+        _details.Find(a => a.ChainID == set.ChainID)!.LastSyncComplete = true;
     }
         
     private async Task UpdateBasicDetails(ChainID chainID) {
@@ -341,12 +368,23 @@ public class DatabaseService {
     }
 
     private async Task UpdateListings(OblivionDetails set) {
-        foreach (var listing in set.Listings.Where(a => !a.Finalized)) await RetrieveListing(set.ChainID, listing.Version, listing.ID, true);
-            
-        for (var id = set.Listings.Count(a => a.Version == 1); id < set.TotalListingsV1; id++) await RetrieveListing(set.ChainID, 1, Convert.ToUInt32(id), true);
-        for (var id = set.Listings.Count(a => a.Version == 2); id < set.TotalListingsV2; id++) await RetrieveListing(set.ChainID, 2, Convert.ToUInt32(id), true);
+        foreach (var listing in set.Listings.Where(a => !a.Finalized)) {
+            if (CheckCancel()) return;
+            await RetrieveListing(set.ChainID, listing.Version, listing.ID, true);
+        }
+
+        for (var id = set.Listings.Count(a => a.Version == 1); id < set.TotalListingsV1; id++) {
+            if (CheckCancel()) return;
+            await RetrieveListing(set.ChainID, 1, Convert.ToUInt32(id), true);
+        }
+
+        for (var id = set.Listings.Count(a => a.Version == 2); id < set.TotalListingsV2; id++) {
+            if (CheckCancel()) return;
+            await RetrieveListing(set.ChainID, 2, Convert.ToUInt32(id), true);
+        }
 
         foreach (var listing in set.Listings.Where(a => !a.Finalized)) {
+            if (CheckCancel()) return;
             var checkNft = set.NFTs.Find(a => a.Address == listing.NFT) ?? await RetrieveNFT(set.ChainID, listing.NFT, false);
 
             if (checkNft != null) {
@@ -369,6 +407,7 @@ public class DatabaseService {
                 
         foreach (var token in payments.PaymentTokens) {
             foreach (var offer in listing.Offers.Where(a => a.PaymentToken == token.Address && !a.Claimed)) {
+                if (CheckCancel()) return;
                 var check = await RetrieveOffer(chainId, listing.Version, listing.ID, token.Address, offer.ID, true);
                 if (check.Claimed && listing.SaleState == 0) continue;
                 var value = await ConvertTokensToUSD(BigInteger.Parse(check.Amount), token.Decimals, token.CoinGeckoKey);
@@ -380,6 +419,7 @@ public class DatabaseService {
                     
             var total = await _blockchain.GetListingOffers(chainId, listing.Version, listing.ID, token.Address);
             for (var id = listing.Offers.Count(a => a.PaymentToken == token.Address); id < total; id++) {
+                if (CheckCancel()) return;
                 var check = await RetrieveOffer(chainId, listing.Version, listing.ID, token.Address, Convert.ToUInt32(id), true);
                 if (check.Claimed && listing.SaleState == 0) continue;
                 var value = await ConvertTokensToUSD(BigInteger.Parse(check.Amount), token.Decimals, token.CoinGeckoKey);
@@ -396,27 +436,46 @@ public class DatabaseService {
     }
 
     private async Task UpdateCollections(OblivionDetails set) {
-        foreach (var collection in set.Collections) await RetrieveCollection(set.ChainID, collection.ID, true);
+        foreach (var collection in set.Collections) {
+            if (CheckCancel()) return;
+            await RetrieveCollection(set.ChainID, collection.ID, true);
+        }
 
-        for (var id = set.Collections.Count; id < set.TotalCollections; id++) 
+        for (var id = set.Collections.Count; id < set.TotalCollections; id++) {
+            if (CheckCancel()) return;
             await RetrieveCollection(set.ChainID, Convert.ToUInt32(id), true);
+        }
 
         var collections = _details.Find(a => a.ChainID == set.ChainID)?.Collections.ToList();
         if (collections == null) return;
-        foreach (var nft in collections.SelectMany(collection => collection.Nfts)) await RetrieveNFT(set.ChainID, nft, false);
+
+        foreach (var nft in collections.SelectMany(collection => collection.Nfts)) {
+            if (CheckCancel()) return;
+            await RetrieveNFT(set.ChainID, nft, false);
+        }
+        
         _details.Find(a => a.ChainID == set.ChainID)!.CollectionsUpdated = true;
     }
 
     private async Task UpdateReleases(OblivionDetails set) {
-        foreach (var release in set.Releases.Where(a => !a.Ended)) 
+        foreach (var release in set.Releases.Where(a => !a.Ended)) {
+            if (CheckCancel()) return;
             await RetrieveRelease(set.ChainID, release.ID, true);
+        }
 
-        for (var id = set.Releases.Count; id < set.TotalReleases; id++) 
+        for (var id = set.Releases.Count; id < set.TotalReleases; id++) {
+            if (CheckCancel()) return;
             await RetrieveRelease(set.ChainID, Convert.ToUInt32(id), true);
+        }
 
         var releases = _details.Find(a => a.ChainID == set.ChainID)?.Releases.ToList();
         if (releases == null) return;
-        foreach (var release in releases) await RetrieveNFT(set.ChainID, release.NFT, false);
+
+        foreach (var release in releases) {
+            if (CheckCancel()) return;
+            await RetrieveNFT(set.ChainID, release.NFT, false);
+        }
+        
         _details.Find(a => a.ChainID == set.ChainID)!.ReleasesUpdated = true;
     }
 
@@ -436,6 +495,7 @@ public class DatabaseService {
         await Task.Run(() => {
             var sales = set.Listings.Where(a => a.WasSold);
             foreach (var sale in sales) {
+                if (CheckCancel()) return;
                 var collection = set.Collections.Find(a => a.Nfts.Contains(sale.NFT));
                 if (collection != null) sale.SaleInformation.CollectionId = collection.ID;
                 else sale.SaleInformation.CollectionId = null;
@@ -448,7 +508,11 @@ public class DatabaseService {
         var payments = Globals.Payments.Find(a => a.ChainID == chainID);
         if (payments == null) return;
 
-        foreach (var token in payments.PaymentTokens) token.Price = await _lookup.GetCurrentPrice(token.CoinGeckoKey);
+        foreach (var token in payments.PaymentTokens) {
+            if (CheckCancel()) return;
+            token.Price = await _lookup.GetCurrentPrice(token.CoinGeckoKey);
+        }
+        
         _details.Find(a => a.ChainID == chainID)!.TokensUpdated = true;
     }
 
@@ -461,6 +525,8 @@ public class DatabaseService {
         var blocksToScan = lastBlock - set.LastReleaseScannedBlock;
 
         while (blocksToScan > 0 && scannedBlocks < Globals.MAX_BLOCKS_SCANNED_PER_UPDATE) {
+            if (CheckCancel()) return;
+            
             if (set.LastReleaseScannedBlock > lastBlock) {
                 set.LastReleaseScannedBlock = lastBlock;
                 break;
@@ -504,6 +570,7 @@ public class DatabaseService {
             var details = _details.Find(a => a.ChainID == chainID);
             if (details == null) return;
             foreach (var listing in details.Listings.Where(a => !a.Finalized || !InitialSyncComplete)) {
+                if (CheckCancel()) return;
                 var collection = details.Collections.Find(a => a.Nfts.Contains(listing.NFT));
                 if (collection != null) {
                     listing.CollectionId = collection.ID;
