@@ -523,11 +523,10 @@ public class DatabaseService {
         if (set.ReleaseStartingBlock == 0) return;
         if (set.LastReleaseScannedBlock == 0) set.LastReleaseScannedBlock = set.ReleaseStartingBlock - 1;
 
-        var scannedBlocks = 0;
         var lastBlock = await _blockchain.GetLatestBlock(set.ChainID);
         var blocksToScan = lastBlock - set.LastReleaseScannedBlock;
 
-        while (blocksToScan > 0 && scannedBlocks < Globals.MAX_BLOCKS_SCANNED_PER_UPDATE) {
+        while (blocksToScan > 0) {
             if (CheckCancel()) return;
             
             if (set.LastReleaseScannedBlock > lastBlock) {
@@ -541,12 +540,10 @@ public class DatabaseService {
             if (blocksToScan > 5000) {
                 end = start + 5000;
                 blocksToScan -= 5000;
-                scannedBlocks += 5000;
             }
             else {
                 end = start + blocksToScan;
                 blocksToScan = 0;
-                scannedBlocks += (int) blocksToScan;
             }
 
             var sales = await _blockchain.CheckReleaseSales(set.ChainID, start, end);
