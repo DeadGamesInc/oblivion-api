@@ -192,7 +192,7 @@ public class LookupService {
             var cidList = new CidList { cids = cids };
             var content = new StringContent(JsonConvert.SerializeObject(cidList), Encoding.UTF8, "application/json");
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-            _logger.LogDebug("A {Content}", await content.ReadAsStringAsync());
+            _logger.LogDebug("IPFS CIDS: {Content}", await content.ReadAsStringAsync());
             var result = await client.PostAsync(Globals.IPFS_CID_POST_URL, content);
             if (!result.IsSuccessStatusCode) {
                 _logger.LogWarning("IPFS pin CIDs update failed: {Code} : {Reason}", result.StatusCode, result.ReasonPhrase);

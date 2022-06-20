@@ -12,4 +12,11 @@ public static class Contracts {
     public static readonly ContractDetails OblivionMarketV2 = new("0xCAD9E2AB8dC48bfd3779c2915421d834e7210726", "0x3Ed54FcdB2eea075F096166C2d48A5580Fd0F50D", "0xB9e43509dBa3aE5c7307dC887C5771744E5a4dC3");
     public static readonly ContractDetails OblivionCollectionManager = new("0x1A75487053676EDb05f9B9A8B73FE6f1580CfFd1", "0x47118A711D8aaAff53101DDD84F822E3f1D987B6", "0xD710425091cA0163CF73d8d51da0539b99DA981c");
     public static readonly ContractDetails OblivionMintingService = new("0xB1890952A926E5256Db3D5182a76cC1cF42ac5a6", "0x403EA5b2A7019f02664Db21C3de050a0bC85D62A", "0x393995149BAB398E24B0e1BEB90cc24245de883B");
+
+    public static readonly ContractDetailsArray NftFactories = 
+        new(
+            new[] { "" }, 
+            new[] { "0x616f8590423BC7E4e621D092D8730486d7131bd4", "0x5Efb107c485F9f0d1fDfB6d4A298ab99477B709E", "0x3dF5dDb164d1b19b9AC589777365Eb76d1e9104f" }, 
+            new[] { "" }
+            );
 }

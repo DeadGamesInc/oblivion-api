@@ -56,25 +56,35 @@ public class DatabaseService {
         var checkOldNervosTestnet = _details.Find(a => a.ChainID == ChainID.Old_Nervos_Testnet);
         if (checkOldNervosTestnet != null) _details.Remove(checkOldNervosTestnet);
 
-        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CLEAR_DB"))) return;
-        if (!long.TryParse(Environment.GetEnvironmentVariable("CLEAR_DB"), out var chainId)) return;
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CLEAR_DB")) &&
+            long.TryParse(Environment.GetEnvironmentVariable("CLEAR_DB"), out var chainId)) {
+            
+            switch (chainId) {
+                case (long)ChainID.BSC_Mainnet:
+                    var bsc = _details.Find(a => a.ChainID == ChainID.BSC_Mainnet);
+                    if (bsc != null) _details.Remove(bsc);
+                    _details.Add(new BSCMainnetDefaults());
+                    break;
+                case (long)ChainID.BSC_Testnet:
+                    var bscTestnet = _details.Find(a => a.ChainID == ChainID.BSC_Testnet);
+                    if (bscTestnet != null) _details.Remove(bscTestnet);
+                    _details.Add(new BSCTestnetDefaults());
+                    break;
+                case (long)ChainID.Nervos_Testnet:
+                    var nervosTestnet = _details.Find(a => a.ChainID == ChainID.Nervos_Testnet);
+                    if (nervosTestnet != null) _details.Remove(nervosTestnet);
+                    _details.Add(new NervosTestnetDefaults());
+                    break;
+            }
+        }
         
-        switch (chainId) {
-            case (long)ChainID.BSC_Mainnet:
-                var bsc = _details.Find(a => a.ChainID == ChainID.BSC_Mainnet);
-                if (bsc != null) _details.Remove(bsc);
-                _details.Add(new BSCMainnetDefaults());
-                break;
-            case (long)ChainID.BSC_Testnet:
-                var bscTestnet = _details.Find(a => a.ChainID == ChainID.BSC_Testnet);
-                if (bscTestnet != null) _details.Remove(bscTestnet);
-                _details.Add(new BSCTestnetDefaults());
-                break;
-            case (long)ChainID.Nervos_Testnet:
-                var nervosTestnet = _details.Find(a => a.ChainID == ChainID.Nervos_Testnet);
-                if (nervosTestnet != null) _details.Remove(nervosTestnet);
-                _details.Add(new NervosTestnetDefaults());
-                break;
+        foreach (var set in _details) {
+            var nftFactories = Contracts.NftFactories.GetAddresses(set.ChainID);
+            if (!nftFactories.Any()) continue;
+            foreach (var factory in nftFactories) {
+                var check = set.FactoryNftLists.Find(a => a.Contract == factory);
+                if (check == null) set.FactoryNftLists.Add(new FactoryNftList { Contract = factory });
+            }
         }
     }
 
@@ -354,6 +364,7 @@ public class DatabaseService {
         await UpdateSaleCollections(set);
         await UpdateReleaseSales(set);
         await UpdateListingCollections(set.ChainID);
+        await UpdateFactoryNfts(set);
         await UpdateIPFS(set.ChainID);
         _details.Find(a => a.ChainID == set.ChainID)!.LastSyncTime = (int) stopwatch.Elapsed.TotalSeconds;
         _details.Find(a => a.ChainID == set.ChainID)!.LastSyncComplete = true;
@@ -586,10 +597,54 @@ public class DatabaseService {
         });
     }
 
+    private async Task UpdateFactoryNfts(OblivionDetails set) {
+        var factories = Contracts.NftFactories.GetAddresses(set.ChainID);
+        if (factories == null || !factories.Any()) return;
+        
+        foreach (var factory in factories) {
+            var nfts = set.FactoryNftLists.Find(a => a.Contract == factory);
+            if (nfts == null) continue;
+            
+            var total = await _blockchain.GetTotalFactoryNfts(set.ChainID, factory);
+            for (var id = nfts.Nfts.Count; id < total; id++) {
+                if (CheckCancel()) return;
+                var nft = await _blockchain.GetFactoryNft(set.ChainID, factory, (uint) id);
+                if (nft == null) return;
+                var details = await _blockchain.GetNFTDetails(set.ChainID, nft.Address);
+                if (details == null) return;
+                var metadata = await _lookup.GetNFTMetadata(details.URI ?? details.BaseURI);
+                if (metadata == null) return;
+                nft.MetadataUri = details.URI;
+                nft.ImageUri = metadata.image;
+                nfts.Nfts.Add(nft);
+            }
+        }
+    }
+
     private async Task UpdateIPFS(ChainID chainId) {
         var details = _details.Find(a => a.ChainID == chainId);
         if (details == null) return;
-        var cids = (from nft in details.NFTs where nft.Metadata?.Image != null where nft.Metadata.Image.StartsWith(Globals.IPFS_RAW_PREFIX) select nft.Metadata.Image.Remove(0, Globals.IPFS_RAW_PREFIX.Length)).ToList();
+        
+        var cids = new List<string>();
+        
+        foreach (var nft in details.NFTs) {
+            if (!string.IsNullOrEmpty(nft.URI) && nft.URI.StartsWith(Globals.IPFS_RAW_PREFIX))
+                cids.Add(ExtractCID(nft.URI));
+            else if (!string.IsNullOrEmpty(nft.BaseURI) && nft.BaseURI.StartsWith(Globals.IPFS_RAW_PREFIX))
+                cids.Add(ExtractCID(nft.BaseURI));
+            
+            if (nft.Metadata?.Image != null && nft.Metadata.Image.StartsWith(Globals.IPFS_RAW_PREFIX))
+                cids.Add(ExtractCID(nft.Metadata.Image));
+        }
+
+        foreach (var nft in from list in details.FactoryNftLists from nft in list.Nfts where (DateTime.Now - nft.Deployed).Days < Globals.FACTORY_NFT_PIN_DAYS select nft) {
+            if (!string.IsNullOrEmpty(nft.ImageUri) && nft.ImageUri.StartsWith(Globals.IPFS_RAW_PREFIX))
+                cids.Add(ExtractCID(nft.ImageUri));
+                    
+            if (!string.IsNullOrEmpty(nft.MetadataUri) && nft.MetadataUri.StartsWith(Globals.IPFS_RAW_PREFIX))
+                cids.Add(ExtractCID(nft.MetadataUri));
+        }
+        
         await _lookup.PinIPFSCids(cids);
         _details.Find(a => a.ChainID == chainId)!.IPFSUpdated = true;
     }
@@ -766,5 +821,15 @@ public class DatabaseService {
         else price = await _lookup.GetHistoricalPrice(coinGeckoKey, date);
 
         return (decimal)tokenAmount * price;
+    }
+
+    private string ExtractCID(string uri) {
+        if (uri.StartsWith(Globals.IPFS_RAW_PREFIX)) uri = uri.Remove(0, Globals.IPFS_RAW_PREFIX.Length);
+        if (uri.Contains('/')) {
+            var index = uri.IndexOf('/');
+            uri = uri.Remove(index, uri.Length - index);
+        }
+        
+        return uri;
     }
 }

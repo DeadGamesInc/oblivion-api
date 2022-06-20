@@ -147,10 +147,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, $"An exception occured while getting NFT details for {address}");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
         
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return nft;
     }
 
@@ -187,10 +185,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, $"An exception occured while getting NFT token details for {address}");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
         
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return uri;
     }
 
@@ -228,10 +224,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, "An exception occured while getting the total listings");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return total;
     }
 
@@ -270,10 +264,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, $"An exception occured while getting offer count for {id}");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return offers;
     }
 
@@ -312,10 +304,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, $"An exception occured retrieving details for listing id {id}");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return listing;
     }
 
@@ -354,10 +344,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, $"An exception occured retrieving details for offer {paymentToken}:{offerID} on listing {listingID}");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return offer;
     }
 
@@ -432,10 +420,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, "An exception occured while getting release sales");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
         
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return null;
     }
 
@@ -510,10 +496,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, "An exception occured while getting sales information");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return null;
     }
 
@@ -546,10 +530,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, "An exception occured while getting block timestamp");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
         
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return DateTime.MinValue;
     }
 
@@ -582,10 +564,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, "An exception occured while getting latest block number");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return blockNumber;
     }
 
@@ -622,10 +602,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, "An exception occured while getting total collections");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return total;
     }
 
@@ -674,10 +652,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, "An exception occured while getting collection details");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return details;
     }
         
@@ -714,10 +690,8 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, "An exception occured while getting total releases");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
-        }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return total;
     }
         
@@ -760,10 +734,84 @@ public class BlockchainService {
         catch (Exception error) {
             HandleException(chainID, error, "An exception occured while getting release details");
         }
-        finally {
-            _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        return details;
+    }
+
+    public async Task<uint> GetTotalFactoryNfts(ChainID chainID, string factory) {
+        var timer = Stopwatch.StartNew();
+        uint total = 0;
+
+        try {
+            _logger.LogDebug("Getting total factory NFTs for {Factory} on {ChainID}", factory, chainID);
+            var web3 = GetWeb3(chainID);
+
+            if (web3 == null || string.IsNullOrEmpty(factory)) return 0;
+
+            var contract = web3.Eth.GetContract(ABIs.NftFactory, factory);
+            var getFunction = contract.GetFunction("totalNftsCreated");
+            total = await getFunction.CallAsync<uint>();
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting total factory NFTs");
+            else 
+                HandleException(chainID, error, "An exception occured while getting total factory NFTs");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting total factory NFTs");
+            else 
+                HandleException(chainID, error, "An exception occured while getting total factory NFTs");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
+            HandleTimeout(chainID, "Web3 connection timed out getting total factory NFTs");
+        }
+        catch (Exception error) {
+            HandleException(chainID, error, "An exception occured while getting total factory NFTs");
         }
 
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        return total;
+    }
+
+    public async Task<FactoryNftDetails> GetFactoryNft(ChainID chainID, string factory, uint id) {
+        var timer = Stopwatch.StartNew();
+        FactoryNftDetails details = null;
+
+        try {
+            _logger.LogDebug("Retrieving factory NFT {ID} from {Factory} on {ChainID}", id, factory, chainID);
+            var web3 = GetWeb3(chainID);
+
+            if (web3 == null || string.IsNullOrEmpty(factory)) return null;
+
+            var contract = web3.Eth.GetContract(ABIs.NftFactory, factory);
+            var getFunction = contract.GetFunction("nfts");
+            var result = await getFunction.CallAsync<DeployedNftResponse>(id);
+                
+            details = new FactoryNftDetails(result);
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting factory NFT");
+            else 
+                HandleException(chainID, error, "An exception occured while getting factory NFT");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting factory NFT");
+            else 
+                HandleException(chainID, error, "An exception occured while getting factory NFT");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
+            HandleTimeout(chainID, "Web3 connection timed out getting total NFT");
+        }
+        catch (Exception error) {
+            HandleException(chainID, error, "An exception occured while getting factory NFT");
+        }
+
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
         return details;
     }
 

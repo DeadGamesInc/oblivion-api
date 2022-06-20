@@ -26,6 +26,7 @@ public class OblivionDetails {
     public List<ReleaseDetails> Releases { get; set; } = new();
     public List<NFTDetails> NFTs { get; set; } = new();
     public List<ReleaseSaleDetails> ReleaseSales { get; set; } = new();
+    public List<FactoryNftList> FactoryNftLists { get; set; } = new();
 
     public bool ListingsUpdated;
     public bool CollectionsUpdated;

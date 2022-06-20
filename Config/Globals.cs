@@ -16,6 +16,7 @@ public static class Globals {
     
     public const int MAX_INITIAL_SYNC_TIME = 1800;
     public const int MAX_SYNC_TIME = 600;
+    public const int FACTORY_NFT_PIN_DAYS = 7;
 
     public static string IMAGE_CACHE_PREFIX = "https://api.oblivion.art/image-cache/";
 
