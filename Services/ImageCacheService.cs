@@ -62,8 +62,8 @@ public class ImageCacheService {
                 
             uri = uri.Replace(Globals.IPFS_RAW_PREFIX, Globals.IPFS_HTTP_PREFIX);
 
-            var highResFile = $"{nft}_{id}_high";
-            var lowResFile = $"{nft}_{id}_low";
+            var highResFile = $"{nft}_{id}_high".ToLower();
+            var lowResFile = $"{nft}_{id}_low".ToLower();
 
             details.HighResImage = await GetHighRes(uri, highResFile);
 
@@ -170,8 +170,8 @@ public class ImageCacheService {
     }
         
     private static void ClearCachedImages(string nft, uint id) {
-        var highResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_high");
-        var lowResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_low");
+        var highResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_high".ToLower());
+        var lowResFile = Path.Combine(Globals.IMAGE_CACHE_DIR, $"{nft}_{id}_low".ToLower());
             
         if (File.Exists(highResFile)) File.Delete(highResFile);
         if (File.Exists(lowResFile)) File.Delete(lowResFile);

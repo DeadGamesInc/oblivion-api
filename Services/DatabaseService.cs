@@ -91,18 +91,14 @@ public class DatabaseService {
     private bool CheckCancel() {
         if (_updateCancelling) return true;
         var syncTime = (DateTime.Now - _currentSyncStarted).TotalSeconds;
-        
-        switch (InitialSyncComplete) {
-            case false when syncTime > Globals.MAX_INITIAL_SYNC_TIME:
-            case true when syncTime > Globals.MAX_SYNC_TIME:
-                _logger.LogCritical("Update loop being cancelled due to length of sync");
-                _updateCancelling = true;
-                _cancelledSyncs++;
-                _incompleteSyncs = "";
-                foreach (var chain in _details.Where(chain => !chain.LastSyncComplete)) {
-                    _incompleteSyncs += $"{chain.ChainID} ";
-                }
-                break;
+
+        if (InitialSyncComplete && syncTime > Globals.MAX_SYNC_TIME) {
+            _logger.LogCritical("Update loop being cancelled due to length of sync");
+            _updateCancelling = true;
+            _cancelledSyncs++;
+            _incompleteSyncs = "";
+            foreach (var chain in _details.Where(chain => !chain.LastSyncComplete)) 
+                _incompleteSyncs += $"{chain.ChainID} ";
         }
         
         return _updateCancelling;
@@ -823,7 +819,7 @@ public class DatabaseService {
         return (decimal)tokenAmount * price;
     }
 
-    private string ExtractCID(string uri) {
+    private static string ExtractCID(string uri) {
         if (uri.StartsWith(Globals.IPFS_RAW_PREFIX)) uri = uri.Remove(0, Globals.IPFS_RAW_PREFIX.Length);
         if (uri.Contains('/')) {
             var index = uri.IndexOf('/');

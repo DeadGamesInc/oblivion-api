@@ -14,7 +14,6 @@ public static class Globals {
     public static int THROTTLE_WAIT = 500;
     public static int COIN_GECKO_THROTTLE_WAIT = 1500;
     
-    public const int MAX_INITIAL_SYNC_TIME = 1800;
     public const int MAX_SYNC_TIME = 600;
     public const int FACTORY_NFT_PIN_DAYS = 7;
 
