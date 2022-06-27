@@ -17,6 +17,6 @@ public static class Contracts {
         new(
             new[] { "" }, 
             new[] { "0x616f8590423BC7E4e621D092D8730486d7131bd4", "0x5Efb107c485F9f0d1fDfB6d4A298ab99477B709E", "0x3dF5dDb164d1b19b9AC589777365Eb76d1e9104f" }, 
-            new[] { "" }
+            new[] { "0xE741be69CDe48EcD7B4EeF58C0E9C44E8B50165d", "0xb10fB1E0e838fDb9EFf57bB73da4a12B5D2b5A3e", "0x6BE597B6fa03A5A8F47485624c1ff4d7Bab6E94c" }
             );
 }
