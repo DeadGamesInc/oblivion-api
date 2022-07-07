@@ -91,6 +91,51 @@ public class BlockchainService {
         _errors.Find(a => a.ChainID == chainID)!.TotalExceptions++;
     }
 
+    public async Task<NFTType> GetNFTType(ChainID chainID, string address) {
+        var timer = Stopwatch.StartNew();
+        
+        try {
+            _logger.LogDebug("Checking NFT type for {Address} on {ChainID}", address, chainID);
+            var web3 = GetWeb3(chainID);
+            if (web3 == null) return NFTType.UNKNOWN;
+
+            byte[] interfaceID = { 0xd9, 0xb6, 0x7a, 0x26 };
+
+            var contract = web3.Eth.GetContract(ABIs.OblivionNFT1155, address);
+            var supportsInterface = contract.GetFunction("supportsInterface");
+            var isERC1155 = await supportsInterface.CallAsync<bool>(interfaceID);
+
+            return isERC1155 ? NFTType.ERC1155 : NFTType.ERC721;
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientUnknownException error) {
+            if (error.InnerException is System.Net.Http.HttpRequestException) 
+                HandleTimeout(chainID, "Web3 connection timed out getting NFT details");
+            else 
+                HandleException(chainID, error, $"An exception occured while getting NFT details for {address}");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcResponseException error) {
+            if (error.Message.Contains("internal error: eth_call")) 
+                HandleTimeout(chainID, "Web3 connection timed out getting NFT details");
+            else 
+                HandleException(chainID, error, $"An exception occured while getting NFT details for {address}");
+        }
+        catch (Nethereum.JsonRpc.Client.RpcClientTimeoutException) {
+            HandleTimeout(chainID, "Web3 connection timed out getting NFT details");
+        }
+        catch (Nethereum.ABI.FunctionEncoding.SmartContractRevertException error) {
+            if (error.Message.Contains("ERC721Metadata: URI query for nonexistent token"))
+                HandleContractError(chainID, $"ERC721 nonexistent token revert on Token ID 0 for {address}");
+            else
+                HandleContractError(chainID, error, $"A smart contract exception occurred on token ID 0 for {address}");
+        }
+        catch (Exception error) {
+            HandleException(chainID, error, $"An exception occured while getting NFT details for {address}");
+        }
+        
+        _stats.Find(a => a.ChainID == chainID)?.AddOperation(timer.ElapsedMilliseconds);
+        return NFTType.UNKNOWN;
+    }
+
     public async Task<NFTDetails> GetNFTDetails(ChainID chainID, string address) {
         var timer = Stopwatch.StartNew();
         var nft = new NFTDetails { Address = address };
