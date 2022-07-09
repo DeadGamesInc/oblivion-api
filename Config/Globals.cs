@@ -31,7 +31,8 @@ public static class Globals {
     public static readonly List<BlockchainDetails> Blockchains = new() {
         new() { ChainID = ChainID.BSC_Mainnet, Node = "https://bsc-dataseed.binance.org" },
         new() { ChainID = ChainID.BSC_Testnet, Node = "https://data-seed-prebsc-1-s1.binance.org:8545" },
-        new() { ChainID = ChainID.Nervos_Testnet, Node = "https://godwoken-testnet-v1.ckbapp.dev" }
+        new() { ChainID = ChainID.Nervos_Testnet, Node = "https://godwoken-testnet-v1.ckbapp.dev" },
+        new() { ChainID = ChainID.Nervos_Mainnet, Node = "https://v1.mainnet.godwoken.io/rpc" }
     };
 
     public static readonly List<PaymentDetails> Payments = new() {
@@ -48,5 +49,8 @@ public static class Globals {
         new() { ChainID = ChainID.Nervos_Testnet, PaymentTokens = new() {
             new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "CKB", CoinGeckoKey = "nervos-network" }
         }},
+        new() { ChainID = ChainID.Nervos_Mainnet, PaymentTokens = new() {
+            new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "CKB", CoinGeckoKey = "nervos-network" }
+        }}
     };
 }

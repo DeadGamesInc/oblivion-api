@@ -52,6 +52,8 @@ public class DatabaseService {
         if (_details.Find(a => a.ChainID == ChainID.BSC_Mainnet) == null) _details.Add(new BSCMainnetDefaults());
         if (_details.Find(a => a.ChainID == ChainID.BSC_Testnet) == null) _details.Add(new BSCTestnetDefaults());
         if (_details.Find(a => a.ChainID == ChainID.Nervos_Testnet) == null) _details.Add(new NervosTestnetDefaults());
+        if (_details.Find(a => a.ChainID == ChainID.Nervos_Mainnet) == null) _details.Add(new NervosMainnetDefaults());
+        
         
         var checkOldNervosTestnet = _details.Find(a => a.ChainID == ChainID.Old_Nervos_Testnet);
         if (checkOldNervosTestnet != null) _details.Remove(checkOldNervosTestnet);
@@ -74,6 +76,11 @@ public class DatabaseService {
                     var nervosTestnet = _details.Find(a => a.ChainID == ChainID.Nervos_Testnet);
                     if (nervosTestnet != null) _details.Remove(nervosTestnet);
                     _details.Add(new NervosTestnetDefaults());
+                    break;
+                case (long)ChainID.Nervos_Mainnet:
+                    var nervosMainnet = _details.Find(a => a.ChainID == ChainID.Nervos_Mainnet);
+                    if (nervosMainnet != null) _details.Remove(nervosMainnet);
+                    _details.Add(new NervosMainnetDefaults());
                     break;
             }
         }

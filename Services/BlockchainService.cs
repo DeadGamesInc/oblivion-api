@@ -881,6 +881,10 @@ public class BlockchainService {
             case ChainID.Nervos_Testnet:
                 var nervosTestnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.Nervos_Testnet);
                 return nervosTestnet != null ? new Web3(nervosTestnet.Node) { TransactionManager = { UseLegacyAsDefault = true } } : null;
+            
+            case ChainID.Nervos_Mainnet:
+                var nervosMainnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.Nervos_Mainnet);
+                return nervosMainnet != null ? new Web3(nervosMainnet.Node) { TransactionManager = { UseLegacyAsDefault = true } } : null;
 
             default: return null;
         }
