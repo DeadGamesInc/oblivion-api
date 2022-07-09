@@ -22,8 +22,8 @@ public class BlockchainService {
 
     public BlockchainService(ILogger<BlockchainService> logger) {
         _logger = logger;
-        _errors = new List<BlockchainErrors> { new BSCMainnetErrors(), new BSCTestnetErrors(), new NervosTestnetErrors() };
-        _stats = new List<BlockchainStats> { new BSCMainnetStats(), new BSCTestnetStats(), new NervosTestnetStats() };
+        _errors = new List<BlockchainErrors> { new BSCMainnetErrors(), new BSCTestnetErrors(), new NervosTestnetErrors(), new NervosMainnetErrors() };
+        _stats = new List<BlockchainStats> { new BSCMainnetStats(), new BSCTestnetStats(), new NervosTestnetStats(), new NervosMainnetStats() };
     }
 
     public async Task AddStatus(StringBuilder builder) {
