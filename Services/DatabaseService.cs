@@ -326,7 +326,9 @@ public class DatabaseService {
     }
 
     public async Task<ReleaseDetails> RefreshRelease(ChainID chainID, uint id) {
-        return await RetrieveRelease(chainID, id, true);
+        var release = await RetrieveRelease(chainID, id, true);
+        if (release != null) await RetrieveNFT(chainID, release.NFT, false);
+        return release;
     }
 
     public async Task<NFTDetails> RefreshNft(ChainID chainID, string address) {
