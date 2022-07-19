@@ -371,6 +371,7 @@ public class DatabaseService {
         await UpdateListingCollections(set.ChainID);
         await UpdateFactoryNfts(set);
         await UpdateIPFS(set.ChainID);
+        await UpdateNftApi(set.ChainID);
         _details.Find(a => a.ChainID == set.ChainID)!.LastSyncTime = (int) stopwatch.Elapsed.TotalSeconds;
         _details.Find(a => a.ChainID == set.ChainID)!.LastSyncComplete = true;
     }
@@ -652,6 +653,15 @@ public class DatabaseService {
         
         await _lookup.PinIPFSCids(cids);
         _details.Find(a => a.ChainID == chainId)!.IPFSUpdated = true;
+    }
+
+    private async Task UpdateNftApi(ChainID chainID) {
+        var details = _details.Find(a => a.ChainID == chainID);
+        if (details == null) return;
+
+        var nfts = details.NFTs.Select(nft => nft.Address).ToList();
+        await _lookup.UpdateNftApi(chainID, nfts);
+        details.NFTAPIUpdated = true;
     }
 
     private async Task<ListingDetails> RetrieveListing(ChainID chainID, int version, uint id, bool forceUpdate) {

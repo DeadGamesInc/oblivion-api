@@ -36,6 +36,7 @@ public class OblivionDetails {
     public bool ReleaseSalesUpdated;
     public bool ListingCollectionsUpdated;
     public bool IPFSUpdated;
+    public bool NFTAPIUpdated;
 
     public int LastSyncTime;
     public bool LastSyncComplete;
@@ -49,6 +50,7 @@ public class OblivionDetails {
         ReleaseSalesUpdated = false;
         ListingCollectionsUpdated = false;
         IPFSUpdated = false;
+        NFTAPIUpdated = false;
         LastSyncComplete = false;
     }
 
@@ -63,6 +65,7 @@ public class OblivionDetails {
         builder.AppendLine($"Release Sales Updated       : {ReleaseSalesUpdated}");
         builder.AppendLine($"Listing Collections Updated : {ListingCollectionsUpdated}");
         builder.AppendLine($"IPFS Updated                : {IPFSUpdated}");
+        builder.AppendLine($"NFT API Updated             : {NFTAPIUpdated}");
         builder.AppendLine($"Last Release Scanned Block  : {LastReleaseScannedBlock}");
         builder.AppendLine($"Last Sync Time (seconds)    : {LastSyncTime}");
     }

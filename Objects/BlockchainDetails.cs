@@ -10,4 +10,5 @@ namespace OblivionAPI.Objects;
 public class BlockchainDetails {
     public ChainID ChainID;
     public string Node;
+    public string NftApiUri;
 }
