@@ -98,3 +98,10 @@ public class NervosMainnetDefaults : OblivionDetails {
         ReleaseStartingBlock = 25791;
     }
 }
+
+public class MaticTestnetDefaults : OblivionDetails {
+    public MaticTestnetDefaults() {
+        ChainID = ChainID.Matic_Testnet;
+        ReleaseStartingBlock = 1658432363;
+    }
+}

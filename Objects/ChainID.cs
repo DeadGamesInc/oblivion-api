@@ -12,5 +12,5 @@ public enum ChainID : long {
     BSC_Testnet = 97,
     Nervos_Testnet = 71401,
     Nervos_Mainnet = 71402,
-    Old_Nervos_Testnet = 868455272153094
+    Matic_Testnet = 80001
 }

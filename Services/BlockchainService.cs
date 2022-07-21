@@ -22,8 +22,8 @@ public class BlockchainService {
 
     public BlockchainService(ILogger<BlockchainService> logger) {
         _logger = logger;
-        _errors = new List<BlockchainErrors> { new BSCMainnetErrors(), new BSCTestnetErrors(), new NervosTestnetErrors(), new NervosMainnetErrors() };
-        _stats = new List<BlockchainStats> { new BSCMainnetStats(), new BSCTestnetStats(), new NervosTestnetStats(), new NervosMainnetStats() };
+        _errors = new List<BlockchainErrors> { new BSCMainnetErrors(), new BSCTestnetErrors(), new NervosTestnetErrors(), new NervosMainnetErrors(), new MaticTestnetErrors() };
+        _stats = new List<BlockchainStats> { new BSCMainnetStats(), new BSCTestnetStats(), new NervosTestnetStats(), new NervosMainnetStats(), new MaticTestnetStats() };
     }
 
     public async Task AddStatus(StringBuilder builder) {
@@ -885,6 +885,10 @@ public class BlockchainService {
             case ChainID.Nervos_Mainnet:
                 var nervosMainnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.Nervos_Mainnet);
                 return nervosMainnet != null ? new Web3(nervosMainnet.Node) { TransactionManager = { UseLegacyAsDefault = true } } : null;
+            
+            case ChainID.Matic_Testnet:
+                var maticTestnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.Matic_Testnet);
+                return maticTestnet != null ? new Web3(maticTestnet.Node) { TransactionManager = { UseLegacyAsDefault = true } } : null;
 
             default: return null;
         }

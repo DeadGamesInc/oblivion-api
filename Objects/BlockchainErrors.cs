@@ -19,3 +19,4 @@ public class BSCMainnetErrors : BlockchainErrors { public BSCMainnetErrors() { C
 public class BSCTestnetErrors : BlockchainErrors { public BSCTestnetErrors() { ChainID = ChainID.BSC_Testnet; } }
 public class NervosTestnetErrors : BlockchainErrors { public NervosTestnetErrors() { ChainID = ChainID.Nervos_Testnet; } }
 public class NervosMainnetErrors : BlockchainErrors { public NervosMainnetErrors() { ChainID = ChainID.Nervos_Mainnet; } }
+public class MaticTestnetErrors : BlockchainErrors { public MaticTestnetErrors() { ChainID = ChainID.Matic_Testnet; } }
