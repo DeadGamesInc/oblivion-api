@@ -619,6 +619,10 @@ public class DatabaseService {
                 if (CheckCancel()) return;
                 var nft = await _blockchain.GetFactoryNft(set.ChainID, factory, (uint) id);
                 if (nft == null) return;
+
+                var checkExists = _details.Find(a => a.ChainID == set.ChainID)?.NFTs.Find(a => a.Address == nft.Address);
+                if (checkExists != null) continue;
+                
                 var details = await _blockchain.GetNFTDetails(set.ChainID, nft.Address);
                 if (details == null) return;
                 var metadata = await _lookup.GetNFTMetadata(details.URI ?? details.BaseURI);
@@ -678,7 +682,10 @@ public class DatabaseService {
         if (listing == null) {
             listing = await _blockchain.GetListing(chainID, version, id);
             if (listing == null) return null;
-            details.Listings.Add(listing);
+
+            var checkExists = _details.Find(a => a.ChainID == chainID)?.Listings.Find(a => a.Version == version && a.ID == id);
+            if (checkExists == null) details.Listings.Add(listing);
+            
             fresh = true;
         }
 
@@ -705,8 +712,9 @@ public class DatabaseService {
 
             var nft = await RetrieveNFT(chainID, listing.NFT, false);
             if (nft != null) offer.NftSymbol = nft.Symbol;
-                
-            listing.Offers.Add(offer);
+
+            var checkExists = _details.Find(a => a.ChainID == chainID)?.Listings.Find(a => a.Version == version && a.ID == id)?.Offers.Find(a => a.PaymentToken == paymentToken && a.ID == offerID);
+            if (checkExists == null) listing.Offers.Add(offer);
             fresh = true;
         }
 
@@ -728,7 +736,9 @@ public class DatabaseService {
         if (collection == null) {
             collection = await _blockchain.GetCollection(chainID, id);
             if (collection == null) return null;
-            details.Collections.Add(collection);
+
+            var checkExists = _details.Find(a => a.ChainID == chainID)?.Collections.Find(a => a.ID == id);
+            if (checkExists == null) details.Collections.Add(collection);
             fresh = true;
         }
 
@@ -818,7 +828,9 @@ public class DatabaseService {
         if (release == null) {
             release = await _blockchain.GetRelease(chainID, id);
             if (release == null) return null;
-            details.Releases.Add(release);
+
+            var checkExists = _details.Find(a => a.ChainID == chainID)?.Releases.Find(a => a.ID == id);
+            if (checkExists == null) details.Releases.Add(release);
             fresh = true;
         }
 
