@@ -22,8 +22,8 @@ public class BlockchainService {
 
     public BlockchainService(ILogger<BlockchainService> logger) {
         _logger = logger;
-        _errors = new List<BlockchainErrors> { new BSCMainnetErrors(), new BSCTestnetErrors(), new NervosTestnetErrors(), new NervosMainnetErrors(), new MaticTestnetErrors() };
-        _stats = new List<BlockchainStats> { new BSCMainnetStats(), new BSCTestnetStats(), new NervosTestnetStats(), new NervosMainnetStats(), new MaticTestnetStats() };
+        _errors = new List<BlockchainErrors> { new BSCMainnetErrors(), new BSCTestnetErrors(), new NervosTestnetErrors(), new NervosMainnetErrors(), new MaticTestnetErrors(), new MaticMainnetErrors() };
+        _stats = new List<BlockchainStats> { new BSCMainnetStats(), new BSCTestnetStats(), new NervosTestnetStats(), new NervosMainnetStats(), new MaticTestnetStats(), new MaticMainnetStats() };
     }
 
     public async Task AddStatus(StringBuilder builder) {
@@ -889,6 +889,10 @@ public class BlockchainService {
             case ChainID.Matic_Testnet:
                 var maticTestnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.Matic_Testnet);
                 return maticTestnet != null ? new Web3(maticTestnet.Node) { TransactionManager = { UseLegacyAsDefault = true } } : null;
+            
+            case ChainID.Matic_Mainnet:
+                var maticMainnet = Globals.Blockchains.Find(a => a.ChainID == ChainID.Matic_Mainnet);
+                return maticMainnet != null ? new Web3(maticMainnet.Node) { TransactionManager = { UseLegacyAsDefault = true } } : null;
 
             default: return null;
         }

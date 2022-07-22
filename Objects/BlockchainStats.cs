@@ -18,3 +18,4 @@ public class BSCTestnetStats : BlockchainStats { public BSCTestnetStats() { Chai
 public class NervosTestnetStats : BlockchainStats { public NervosTestnetStats() { ChainID = ChainID.Nervos_Testnet; } }
 public class NervosMainnetStats : BlockchainStats { public NervosMainnetStats() { ChainID = ChainID.Nervos_Mainnet; } }
 public class MaticTestnetStats : BlockchainStats { public MaticTestnetStats() { ChainID = ChainID.Matic_Testnet; } }
+public class MaticMainnetStats : BlockchainStats { public MaticMainnetStats() { ChainID = ChainID.Matic_Mainnet; } }

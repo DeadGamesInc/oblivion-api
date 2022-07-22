@@ -54,6 +54,7 @@ public class DatabaseService {
         if (_details.Find(a => a.ChainID == ChainID.Nervos_Testnet) == null) _details.Add(new NervosTestnetDefaults());
         if (_details.Find(a => a.ChainID == ChainID.Nervos_Mainnet) == null) _details.Add(new NervosMainnetDefaults());
         if (_details.Find(a => a.ChainID == ChainID.Matic_Testnet) == null) _details.Add(new MaticTestnetDefaults());
+        if (_details.Find(a => a.ChainID == ChainID.Matic_Mainnet) == null) _details.Add(new MaticMainnetDefaults());
         
         
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CLEAR_DB")) &&
@@ -84,6 +85,11 @@ public class DatabaseService {
                     var maticTestnet = _details.Find(a => a.ChainID == ChainID.Matic_Testnet);
                     if (maticTestnet != null) _details.Remove(maticTestnet);
                     _details.Add(new MaticTestnetDefaults());
+                    break;
+                case (long)ChainID.Matic_Mainnet:
+                    var maticMainnet = _details.Find(a => a.ChainID == ChainID.Matic_Mainnet);
+                    if (maticMainnet != null) _details.Remove(maticMainnet);
+                    _details.Add(new MaticMainnetDefaults());
                     break;
             }
         }

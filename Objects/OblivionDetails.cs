@@ -105,3 +105,10 @@ public class MaticTestnetDefaults : OblivionDetails {
         ReleaseStartingBlock = 1658432363;
     }
 }
+
+public class MaticMainnetDefaults : OblivionDetails {
+    public MaticMainnetDefaults() {
+        ChainID = ChainID.Matic_Mainnet;
+        ReleaseStartingBlock = 1658510444;
+    }
+}

@@ -33,7 +33,8 @@ public static class Globals {
         new() { ChainID = ChainID.BSC_Testnet, Node = "https://data-seed-prebsc-1-s1.binance.org:8545", NftApiUri = "https://nft-api.deadgames.io/bsc_testnet/trackNfts" },
         new() { ChainID = ChainID.Nervos_Testnet, Node = "https://godwoken-testnet-v1.ckbapp.dev", NftApiUri = "https://nft-api.deadgames.io/nervos_testnet/trackNfts" },
         new() { ChainID = ChainID.Nervos_Mainnet, Node = "https://v1.mainnet.godwoken.io/rpc", NftApiUri = "https://nft-api.deadgames.io/nervos/trackNfts" },
-        new() { ChainID = ChainID.Matic_Testnet, Node = "https://rpc-mumbai.maticvigil.com/v1/f9b890936205db15f52a4f48f228c46abf346fa8", NftApiUri = "https://nft-api.deadgames.io/matic_testnet/trackNfts" }
+        new() { ChainID = ChainID.Matic_Testnet, Node = "https://rpc-mumbai.maticvigil.com/v1/f9b890936205db15f52a4f48f228c46abf346fa8", NftApiUri = "https://nft-api.deadgames.io/matic_testnet/trackNfts" },
+        new() { ChainID = ChainID.Matic_Mainnet, Node = "https://polygon-rpc.com", NftApiUri = "https://nft-api.deadgames.io/matic/trackNfts" }
     };
 
     public static readonly List<PaymentDetails> Payments = new() {
@@ -54,6 +55,9 @@ public static class Globals {
             new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "CKB", CoinGeckoKey = "nervos-network" }
         }},
         new() { ChainID = ChainID.Matic_Testnet, PaymentTokens = new() {
+            new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "MATIC", CoinGeckoKey = "matic-network" }
+        }},
+        new() { ChainID = ChainID.Matic_Mainnet, PaymentTokens = new() {
             new() { Address = "0x0000000000000000000000000000000000000000", Symbol = "MATIC", CoinGeckoKey = "matic-network" }
         }}
     };
