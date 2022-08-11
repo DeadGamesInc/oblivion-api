@@ -12,6 +12,8 @@ public static class Contracts {
     public static readonly ContractDetails OblivionMarketV2 = new("0xCAD9E2AB8dC48bfd3779c2915421d834e7210726", "0x3Ed54FcdB2eea075F096166C2d48A5580Fd0F50D", "0xB9e43509dBa3aE5c7307dC887C5771744E5a4dC3", "0x06245A3ADA1B27793D4c9daedd6fba215243e41D", "0x4e5A00bc4aBf02efbaADad25AC3ea75eA645548a", "0x70f9Cf7E2CBFb604eF692386109758978eaA7A71");
     public static readonly ContractDetails OblivionCollectionManager = new("0x1A75487053676EDb05f9B9A8B73FE6f1580CfFd1", "0x47118A711D8aaAff53101DDD84F822E3f1D987B6", "0xD710425091cA0163CF73d8d51da0539b99DA981c", "0x56B8Af98281d4b00Ac3d7b2722459495677F16f3", "0xeBc5103EE33DC1Ea20B15fc81bD36158bEdc2B84", "0xFc71A4aA5484A46CbF502E0970f8b2719f6C7B91");
     public static readonly ContractDetails OblivionMintingService = new("0xB1890952A926E5256Db3D5182a76cC1cF42ac5a6", "0x403EA5b2A7019f02664Db21C3de050a0bC85D62A", "0x393995149BAB398E24B0e1BEB90cc24245de883B", "0xb060cA64f22cE53055960B73Af87fDF030DCd0ef", "0x32033306e092E404Ee9B206fBE044EA873219951", "0x3dCE8E07dD689E6C31686693A6817D323EAe8965");
+    public static readonly ContractDetails OblivionMarket1155 = new("", "0x6709d83d06C5a593d064f0faeE1cE5Dbb831DA70", "", "", "", "");
+    public static readonly ContractDetails OblivionMintingService1155 = new("", "0xd8157c7905146e32Ac419a790069dbB919C09113", "", "", "", "");
 
     public static readonly ContractDetailsArray NftFactories = 
         new(
@@ -22,4 +24,15 @@ public static class Contracts {
             new[] { "0x8637822afF82e276E5d6dBC6b6bAA375cfA24D72", "0xa8207c25B06751f620aaf14f4FF4E0d7760da10B", "0x1E98da8AE967580A8f631484965cb8003dF3d0C0" },
             new[] { "0x32033306e092E404Ee9B206fBE044EA873219951", "0x06245A3ADA1B27793D4c9daedd6fba215243e41D", "0x8637822afF82e276E5d6dBC6b6bAA375cfA24D72" }
             );
+
+    public static readonly ContractDetailsArray Nft1155Factories =
+        new(
+            new[] { "" },
+            new[] { "0x7073c48298275822D36320CF2D462ce20BcdA254", "0xB731c56F240C1A1DfE57C0667fB7482931A6c8d8" },
+            new[] { "" },
+            new[] { "" },
+            new[] { "" },
+            new[] { "" }
+            
+        );
 }

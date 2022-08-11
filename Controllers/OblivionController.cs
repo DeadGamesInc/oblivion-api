@@ -39,6 +39,14 @@ public abstract class OblivionController : ControllerBase {
         var listings = await _database.TotalListings(_chainID);
         return Ok(listings);
     }
+    
+    [HttpGet]
+    [Route("getTotalListings1155")]
+    public async Task<ActionResult<uint>> GetTotalListings1155() {
+        _logger.LogInformation("getTotalListings1155 for Chain ID {ChainID}", _chainID);
+        var listings = await _database.TotalListings1155(_chainID);
+        return Ok(listings);
+    }
         
     [HttpGet]
     [Route("getListings")]
@@ -48,12 +56,31 @@ public abstract class OblivionController : ControllerBase {
         if (listings == null) return NotFound(null);
         return Ok(listings.ToArray());
     }
+    
+    [HttpGet]
+    [Route("getListings1155")]
+    public async Task<ActionResult<ListListingsDTO[]>> GetListings1155() {
+        _logger.LogInformation("getListings1155 on {ChainID}", _chainID);
+        var listings = await _database.GetListings1155(_chainID);
+        if (listings == null) return NotFound(null);
+        return Ok(listings.ToArray());
+    }
 
     [HttpGet]
     [Route("getOpenListings")]
     public async Task<ActionResult<ListListingsDTO[]>> GetOpenListings() {
         _logger.LogInformation("getOpenListings on {ChainID}", _chainID);
         var listings = await _database.GetListings(_chainID);
+        if (listings == null) return NotFound(null);
+        var open = listings.Where(a => a.SaleState == 0);
+        return Ok(open.ToArray());
+    }
+    
+    [HttpGet]
+    [Route("getOpenListings1155")]
+    public async Task<ActionResult<ListListingsDTO[]>> GetOpenListings1155() {
+        _logger.LogInformation("getOpenListings1155 on {ChainID}", _chainID);
+        var listings = await _database.GetListings1155(_chainID);
         if (listings == null) return NotFound(null);
         var open = listings.Where(a => a.SaleState == 0);
         return Ok(open.ToArray());
@@ -68,12 +95,32 @@ public abstract class OblivionController : ControllerBase {
         var open = listings.Where(a => a.SaleState == 1);
         return Ok(open.ToArray());
     }
+    
+    [HttpGet]
+    [Route("getClosedListings1155")]
+    public async Task<ActionResult<ListListingsDTO[]>> GetClosedListings1155() {
+        _logger.LogInformation("getClosedListings1155 on {ChainID}", _chainID);
+        var listings = await _database.GetListings1155(_chainID);
+        if (listings == null) return NotFound(null);
+        var open = listings.Where(a => a.SaleState == 1);
+        return Ok(open.ToArray());
+    }
 
     [HttpGet]
     [Route("getSoldListings")]
     public async Task<ActionResult<ListListingsDTO[]>> GetSoldListings() {
         _logger.LogInformation("getSoldListings on {ChainID}", _chainID);
         var listings = await _database.GetListings(_chainID);
+        if (listings == null) return NotFound(null);
+        var sold = listings.Where(a => a.WasSold);
+        return Ok(sold.ToArray());
+    }
+    
+    [HttpGet]
+    [Route("getSoldListings1155")]
+    public async Task<ActionResult<ListListingsDTO[]>> GetSoldListings1155() {
+        _logger.LogInformation("getSoldListings1155 on {ChainID}", _chainID);
+        var listings = await _database.GetListings1155(_chainID);
         if (listings == null) return NotFound(null);
         var sold = listings.Where(a => a.WasSold);
         return Ok(sold.ToArray());
@@ -88,12 +135,32 @@ public abstract class OblivionController : ControllerBase {
         var list = listings.Where(a => a.NFT == nft);
         return Ok(list.ToArray());
     }
+    
+    [HttpGet]
+    [Route("getListingsByNft1155/{nft}")]
+    public async Task<ActionResult<ListListingsDTO[]>> GetListingsByNft1155(string nft) {
+        _logger.LogInformation("getListingsByNft1155 for {Nft} on {ChainID}", nft, _chainID);
+        var listings = await _database.GetListings1155(_chainID);
+        if (listings == null) return NotFound(null);
+        var list = listings.Where(a => a.NFT == nft);
+        return Ok(list.ToArray());
+    }
 
     [HttpGet]
     [Route("getOpenListingsByNft/{nft}")]
     public async Task<ActionResult<ListListingsDTO[]>> GetOpenListingsByNft(string nft) {
         _logger.LogInformation("getOpenListingsByNft for {Nft} on {ChainID}", nft, _chainID);
         var listings = await _database.GetListings(_chainID);
+        if (listings == null) return NotFound(null);
+        var list = listings.Where(a => a.NFT == nft && a.SaleState == 0);
+        return Ok(list.ToArray());
+    }
+    
+    [HttpGet]
+    [Route("getOpenListingsByNft1155/{nft}")]
+    public async Task<ActionResult<ListListingsDTO[]>> GetOpenListingsByNft1155(string nft) {
+        _logger.LogInformation("getOpenListingsByNft1155 for {Nft} on {ChainID}", nft, _chainID);
+        var listings = await _database.GetListings1155(_chainID);
         if (listings == null) return NotFound(null);
         var list = listings.Where(a => a.NFT == nft && a.SaleState == 0);
         return Ok(list.ToArray());
@@ -108,12 +175,32 @@ public abstract class OblivionController : ControllerBase {
         var list = listings.Where(a => a.Owner == wallet);
         return Ok(list.ToArray());
     }
+    
+    [HttpGet]
+    [Route("getUserListings1155/{wallet}")]
+    public async Task<ActionResult<ListListingsDTO[]>> GetUserListings1155(string wallet) {
+        _logger.LogInformation("getUserListings1155 for {Wallet} on {ChainID}", wallet, _chainID);
+        var listings = await _database.GetListings1155(_chainID);
+        if (listings == null) return NotFound(null);
+        var list = listings.Where(a => a.Owner == wallet);
+        return Ok(list.ToArray());
+    }
 
     [HttpGet]
     [Route("getUserListingsWithOpenOffers/{wallet}")]
     public async Task<ActionResult<ListListingsDTO[]>> GetUserListingWithOpenOffers(string wallet) {
         _logger.LogInformation("getUserListingsWithOpenOffers for {Wallet} on {ChainID}", wallet, _chainID);
         var listings = await _database.GetListings(_chainID);
+        if (listings == null) return NotFound(null);
+        var list = listings.Where(a => a.Owner == wallet && a.SaleState == 0 && a.OpenOffers > 0);
+        return Ok(list.ToArray());
+    }
+    
+    [HttpGet]
+    [Route("getUserListingsWithOpenOffers1155/{wallet}")]
+    public async Task<ActionResult<ListListingsDTO[]>> GetUserListingWithOpenOffers1155(string wallet) {
+        _logger.LogInformation("getUserListingsWithOpenOffers1155 for {Wallet} on {ChainID}", wallet, _chainID);
+        var listings = await _database.GetListings1155(_chainID);
         if (listings == null) return NotFound(null);
         var list = listings.Where(a => a.Owner == wallet && a.SaleState == 0 && a.OpenOffers > 0);
         return Ok(list.ToArray());
@@ -128,12 +215,31 @@ public abstract class OblivionController : ControllerBase {
         var list = listings.Where(a => a.Owner == wallet && a.SaleState == 0);
         return Ok(list.ToArray());
     }
+    
+    [HttpGet]
+    [Route("getUserOpenListings1155/{wallet}")]
+    public async Task<ActionResult<ListListingsDTO[]>> GetUserOpenListings1155(string wallet) {
+        _logger.LogInformation("getUserOpenListings1155 for {Wallet} on {ChainID}", wallet, _chainID);
+        var listings = await _database.GetListings1155(_chainID);
+        if (listings == null) return NotFound(null);
+        var list = listings.Where(a => a.Owner == wallet && a.SaleState == 0);
+        return Ok(list.ToArray());
+    }
 
     [HttpGet]
     [Route("getUserOffers/{wallet}")]
     public async Task<ActionResult<OfferDetails>> GetUserOffers(string wallet) {
         _logger.LogInformation("getUserOffers for {Wallet} on {ChainID}", wallet, _chainID);
         var offers = await _database.GetUserOffers(_chainID, wallet);
+        if (offers == null) return NotFound(null);
+        return Ok(offers.ToArray());
+    }
+    
+    [HttpGet]
+    [Route("getUserOffers1155/{wallet}")]
+    public async Task<ActionResult<OfferDetails>> GetUserOffers1155(string wallet) {
+        _logger.LogInformation("getUserOffers1155 for {Wallet} on {ChainID}", wallet, _chainID);
+        var offers = await _database.GetUserOffers1155(_chainID, wallet);
         if (offers == null) return NotFound(null);
         return Ok(offers.ToArray());
     }
@@ -147,12 +253,22 @@ public abstract class OblivionController : ControllerBase {
         var list = collections.Where(a => a.Owner == wallet);
         return Ok(list.ToArray());
     }
-
+    
     [HttpGet]
     [Route("getUserReleases/{wallet}")]
     public async Task<ActionResult<ReleaseDetails>> GetUserReleases(string wallet) {
         _logger.LogInformation("getUserReleases for {Wallet} on {ChainID}", wallet, _chainID);
         var releases = await _database.GetReleases(_chainID);
+        if (releases == null) return NotFound(null);
+        var list = releases.Where(a => a.Owner == wallet);
+        return Ok(list.ToArray());
+    }
+    
+    [HttpGet]
+    [Route("getUserReleases1155/{wallet}")]
+    public async Task<ActionResult<ReleaseDetails>> GetUserReleases1155(string wallet) {
+        _logger.LogInformation("getUserReleases1155 for {Wallet} on {ChainID}", wallet, _chainID);
+        var releases = await _database.GetReleases1155(_chainID);
         if (releases == null) return NotFound(null);
         var list = releases.Where(a => a.Owner == wallet);
         return Ok(list.ToArray());
@@ -166,6 +282,15 @@ public abstract class OblivionController : ControllerBase {
         if (details == null) return NotFound(null);
         return Ok(details);
     }
+    
+    [HttpGet]
+    [Route("getListing1155/{id}")]
+    public async Task<ActionResult<ListingDetails>> GetListing1155(uint id) {
+        _logger.LogInformation("getListing1155 {ListingID} on {ChainID}", id, _chainID);
+        var details = await _database.ListingDetails1155(_chainID, id);
+        if (details == null) return NotFound(null);
+        return Ok(details);
+    }
 
     [HttpGet]
     [Route("getTotalOffers/{version:int}/{id}")]
@@ -174,12 +299,29 @@ public abstract class OblivionController : ControllerBase {
         var offers = await _database.TotalOffers(_chainID, id, version);
         return Ok(offers);
     }
+    
+    [HttpGet]
+    [Route("getTotalOffers1155/{id}")]
+    public async Task<ActionResult<uint>> GetTotalOffers1155(uint id) {
+        _logger.LogInformation("getTotalOffers1155 for listing {ID} on {ChainID}", id, _chainID);
+        var offers = await _database.TotalOffers1155(_chainID, id);
+        return Ok(offers);
+    }
         
     [HttpGet]
     [Route("getOffers/{version:int}/{id}")]
     public async Task<ActionResult<OfferDetails[]>> GetOffers(int version, uint id) {
         _logger.LogInformation("getOffers for {ID} on {ChainID}", id, _chainID);
         var offers = await _database.GetOffers(_chainID, id, version);
+        if (offers == null) return NotFound(null);
+        return Ok(offers.ToArray());
+    }
+    
+    [HttpGet]
+    [Route("getOffers1155/{version:int}/{id}")]
+    public async Task<ActionResult<OfferDetails[]>> GetOffers1155(uint id) {
+        _logger.LogInformation("getOffers1155 for {ID} on {ChainID}", id, _chainID);
+        var offers = await _database.GetOffers1155(_chainID, id);
         if (offers == null) return NotFound(null);
         return Ok(offers.ToArray());
     }
@@ -193,12 +335,31 @@ public abstract class OblivionController : ControllerBase {
         var list = offers.Where(a => !a.Claimed);
         return Ok(list.ToArray());
     }
+    
+    [HttpGet]
+    [Route("getOpenOffers1155/{id}")]
+    public async Task<ActionResult<OfferDetails[]>> GetOpenOffers1155(uint id) {
+        _logger.LogInformation("getOpenOffers1155 for {ID} on {ChainID}", id, _chainID);
+        var offers = await _database.GetOffers1155(_chainID, id);
+        if (offers == null) return NotFound(null);
+        var list = offers.Where(a => !a.Claimed);
+        return Ok(list.ToArray());
+    }
 
     [HttpGet]
     [Route("getOffer/{version:int}/{id}/{paymentToken}/{offerID}")]
     public async Task<ActionResult<OfferDetails>> GetOffer(int version, uint id, string paymentToken, uint offerID) {
         _logger.LogInformation("getOffer {PaymentToken}:{OfferID} on {ChainID}", id, paymentToken, _chainID);
         var details = await _database.OfferDetails(_chainID, version, id, paymentToken, offerID);
+        if (details == null) return NotFound(null);
+        return Ok(details);
+    }
+    
+    [HttpGet]
+    [Route("getOffer1155/{id}/{paymentToken}/{offerID}")]
+    public async Task<ActionResult<OfferDetails>> GetOffer1155(uint id, string paymentToken, uint offerID) {
+        _logger.LogInformation("getOffer1155 {PaymentToken}:{OfferID} on {ChainID}", id, paymentToken, _chainID);
+        var details = await _database.OfferDetails1155(_chainID, id, paymentToken, offerID);
         if (details == null) return NotFound(null);
         return Ok(details);
     }
@@ -211,12 +372,30 @@ public abstract class OblivionController : ControllerBase {
         if (sales == null) return NotFound(null);
         return Ok(sales.ToArray());
     }
+    
+    [HttpGet]
+    [Route("getSales1155")]
+    public async Task<ActionResult<OblivionSaleInformation[]>> GetSales1155() {
+        _logger.LogInformation("getSales1155 on {ChainID}", _chainID);
+        var sales = await _database.GetSales1155(_chainID);
+        if (sales == null) return NotFound(null);
+        return Ok(sales.ToArray());
+    }
 
     [HttpGet]
     [Route("getNfts")]
     public async Task<ActionResult<NFTDetails[]>> GetNFTs() {
         _logger.LogInformation("getNfts on {ChainID}", _chainID);
         var nfts = await _database.GetNFTs(_chainID);
+        if (nfts == null) return NotFound(null);
+        return Ok(nfts.ToArray());
+    }
+    
+    [HttpGet]
+    [Route("getNfts1155")]
+    public async Task<ActionResult<NFTDetails[]>> GetNFTs1155() {
+        _logger.LogInformation("getNfts1155 on {ChainID}", _chainID);
+        var nfts = await _database.GetNFT1155s(_chainID);
         if (nfts == null) return NotFound(null);
         return Ok(nfts.ToArray());
     }
@@ -229,12 +408,30 @@ public abstract class OblivionController : ControllerBase {
         nfts = (from nft in nfts from check in addresses where string.Equals(nft.Address, check, StringComparison.CurrentCultureIgnoreCase) select nft).ToList();
         return Ok(nfts.ToArray());
     }
+    
+    [HttpPost]
+    [Route("getNftsByAddress1155")]
+    public async Task<ActionResult<NFTDetails[]>> GetNFTSByAddress1155([FromBody] string[] addresses) {
+        _logger.LogInformation("getNftsByAddress1155 on {ChainID}", _chainID);
+        var nfts = await _database.GetNFT1155s(_chainID);
+        nfts = (from nft in nfts from check in addresses where string.Equals(nft.Address, check, StringComparison.CurrentCultureIgnoreCase) select nft).ToList();
+        return Ok(nfts.ToArray());
+    }
 
     [HttpGet]
     [Route("getNft/{address}")]
     public async Task<ActionResult<NFTDetails>> GetNFT(string address) {
         _logger.LogInformation("getNft for {Address} on {ChainID}", address, _chainID);
         var nft = await _database.NFTDetails(_chainID, address);
+        if (nft == null) return NotFound(null);
+        return Ok(nft);
+    }
+    
+    [HttpGet]
+    [Route("getNft1155/{address}")]
+    public async Task<ActionResult<NFTDetails>> GetNFT1155(string address) {
+        _logger.LogInformation("getNft1155 for {Address} on {ChainID}", address, _chainID);
+        var nft = await _database.NFTDetails1155(_chainID, address);
         if (nft == null) return NotFound(null);
         return Ok(nft);
     }
@@ -247,6 +444,15 @@ public abstract class OblivionController : ControllerBase {
         if (tokenURI == null) return NotFound(null);
         return Ok(tokenURI);
     }
+    
+    [HttpGet]
+    [Route("getNftTokenURI1155/{address}/{tokenID}")]
+    public async Task<ActionResult<NFTTokenIDInfo>> GetNFTTokenURI1155(string address, uint tokenID) {
+        _logger.LogInformation("getNftTokenURI1155 for {Address}:{TokenID} on {ChainID}", address, tokenID, _chainID);
+        var tokenURI = await _database.NFTTokenURI1155(_chainID, address, tokenID);
+        if (tokenURI == null) return NotFound(null);
+        return Ok(tokenURI);
+    }
         
     [HttpPost]
     [Route("getNftTokenURIs/{address}")]
@@ -256,6 +462,20 @@ public abstract class OblivionController : ControllerBase {
 
         foreach (var id in tokenIDs) {
             var tokenURI = await _database.NFTTokenURI(_chainID, address, id);
+            if (tokenURI != null) tokenURIs.Add(tokenURI);
+        }
+            
+        return Ok(tokenURIs.ToArray());
+    }
+    
+    [HttpPost]
+    [Route("getNft1155TokenURIs/{address}")]
+    public async Task<ActionResult<NFTTokenIDInfo[]>> GetNFT1155TokenURIs(string address, [FromBody] uint[] tokenIDs) {
+        _logger.LogInformation("getNft1155TokenURIs for {Address} on {ChainID}", address, _chainID);
+        var tokenURIs = new List<NFTTokenID1155Info>();
+
+        foreach (var id in tokenIDs) {
+            var tokenURI = await _database.NFTTokenURI1155(_chainID, address, id);
             if (tokenURI != null) tokenURIs.Add(tokenURI);
         }
             
@@ -295,6 +515,14 @@ public abstract class OblivionController : ControllerBase {
         var releases = await _database.TotalReleases(_chainID);
         return releases;
     }
+    
+    [HttpGet]
+    [Route("getTotalReleases1155")]
+    public async Task<ActionResult<uint>> GetTotalReleases1155() {
+        _logger.LogInformation("getTotalReleases1155 on {ChainID}", _chainID);
+        var releases = await _database.TotalReleases1155(_chainID);
+        return releases;
+    }
 
     [HttpGet]
     [Route("getReleases")]
@@ -304,12 +532,30 @@ public abstract class OblivionController : ControllerBase {
         if (releases == null) return NotFound(null);
         return Ok(releases.ToArray());
     }
+    
+    [HttpGet]
+    [Route("getReleases1155")]
+    public async Task<ActionResult<ReleaseDetails[]>> GetReleases1155() {
+        _logger.LogInformation("getReleases1155 on {ChainID}", _chainID);
+        var releases = await _database.GetReleases1155(_chainID);
+        if (releases == null) return NotFound(null);
+        return Ok(releases.ToArray());
+    }
 
     [HttpGet]
     [Route("getRelease/{id}")]
     public async Task<ActionResult<ReleaseDetails>> GetRelease(uint id) {
         _logger.LogInformation("getRelease {ID} on {ChainID}", id, _chainID);
         var release = await _database.ReleaseDetails(_chainID, id);
+        if (release == null) return NotFound(null);
+        return Ok(release);
+    }
+    
+    [HttpGet]
+    [Route("getRelease1155/{id}")]
+    public async Task<ActionResult<ReleaseDetails>> GetRelease1155(uint id) {
+        _logger.LogInformation("getRelease1155 {ID} on {ChainID}", id, _chainID);
+        var release = await _database.ReleaseDetails1155(_chainID, id);
         if (release == null) return NotFound(null);
         return Ok(release);
     }
@@ -331,12 +577,30 @@ public abstract class OblivionController : ControllerBase {
         if (listing == null) return NotFound(null);
         return Ok(listing);
     }
+    
+    [HttpGet]
+    [Route("refreshListing1155/{id}")]
+    public async Task<ActionResult<ListingDetails>> RefreshListing1155(uint id) {
+        _logger.LogInformation("refreshListing1155 for {ID} on {ChainID}", id, _chainID);
+        var listing = await _database.RefreshListing1155(_chainID, id);
+        if (listing == null) return NotFound(null);
+        return Ok(listing);
+    }
 
     [HttpGet]
     [Route("refreshOffer/{version:int}/{listingId}/{paymentToken}/{id}")]
     public async Task<ActionResult<OfferDetails>> RefreshOffer(int version, uint listingId, string paymentToken, uint id) {
         _logger.LogInformation("refreshOffer {ListingID}:{PaymentToken}:{OfferID} on {ChainID}", listingId, paymentToken, id, _chainID);
         var offer = await _database.RefreshOffer(_chainID, version, listingId, paymentToken, id);
+        if (offer == null) return NotFound(null);
+        return Ok(offer);
+    }
+    
+    [HttpGet]
+    [Route("refreshOffer1155/{listingId}/{paymentToken}/{id}")]
+    public async Task<ActionResult<OfferDetails>> RefreshOffer1155(uint listingId, string paymentToken, uint id) {
+        _logger.LogInformation("refreshOffer {ListingID}:{PaymentToken}:{OfferID} on {ChainID}", listingId, paymentToken, id, _chainID);
+        var offer = await _database.RefreshOffer1155(_chainID, listingId, paymentToken, id);
         if (offer == null) return NotFound(null);
         return Ok(offer);
     }
@@ -358,6 +622,15 @@ public abstract class OblivionController : ControllerBase {
         if (release == null) return NotFound(null);
         return Ok(release);
     }
+    
+    [HttpGet]
+    [Route("refreshRelease1155/{id}")]
+    public async Task<ActionResult<ReleaseDetails>> RefreshRelease1155(uint id) {
+        _logger.LogInformation("refreshRelease1155 {ID} on {ChainId}", id, _chainID);
+        var release = await _database.RefreshRelease1155(_chainID, id);
+        if (release == null) return NotFound(null);
+        return Ok(release);
+    }
         
     [HttpGet]
     [Route("refreshNft/{address}")]
@@ -367,12 +640,30 @@ public abstract class OblivionController : ControllerBase {
         if (nft == null) return NotFound(null);
         return Ok(nft);
     }
+    
+    [HttpGet]
+    [Route("refreshNft1155/{address}")]
+    public async Task<ActionResult<NFTDetails>> RefreshNft1155(string address) {
+        _logger.LogInformation("refreshNft1155 for {Address} on {ChainID}", address, _chainID);
+        var nft = await _database.RefreshNft1155(_chainID, address);
+        if (nft == null) return NotFound(null);
+        return Ok(nft);
+    }
 
     [HttpGet]
     [Route("recacheNft/{address}")]
     public async Task<ActionResult<NFTDetails>> RecacheNft(string address) {
         _logger.LogInformation("recacheNft for {Address} on {ChainID}", address, _chainID);
         var nft = await _database.RecacheNft(_chainID, address);
+        if (nft == null) return NotFound(null);
+        return Ok(nft);
+    }
+    
+    [HttpGet]
+    [Route("recacheNft1155/{address}")]
+    public async Task<ActionResult<NFTDetails>> RecacheNft1155(string address) {
+        _logger.LogInformation("recacheNft1155 for {Address} on {ChainID}", address, _chainID);
+        var nft = await _database.RecacheNft1155(_chainID, address);
         if (nft == null) return NotFound(null);
         return Ok(nft);
     }

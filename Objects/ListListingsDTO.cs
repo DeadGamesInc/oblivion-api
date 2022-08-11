@@ -11,6 +11,7 @@ public class ListListingsDTO {
     public string TargetPrice { get; set; }
     public string MinimumPrice { get; set; }
     public uint TokenId { get; set; }
+    public uint Quantity { get; set; }
     public string SaleEnd { get; set; }
     public uint PaymentMethod { get; set; }
     public uint SaleType { get; set; }
@@ -46,6 +47,30 @@ public class ListListingsDTO {
         TopOfferAmount = listing.TopOffer?.Amount;
         TopOfferToken = listing.TopOffer?.PaymentToken;
         NftName = nft?.Name;
+        var token = nft?.TokenDetails.Find(a => a.TokenId == listing.TokenId);
+        NftCacheHighRes = token?.CacheHighRes;
+        NftCacheLowRes = token?.CacheLowRes;
+    }
+    
+    public ListListingsDTO(ListingDetails1155 listing, Nft1155Details nft) {
+        ID = listing.ID;
+        PaymentMethod = listing.PaymentMethod;
+        NFT = listing.NFT;
+        TokenId = listing.TokenId;
+        Quantity = listing.Quantity;
+        PaymentToken = listing.PaymentToken;
+        TargetPrice = listing.TargetPrice;
+        MinimumPrice = listing.MinimumPrice;
+        SaleEnd = listing.SaleEnd;
+        SaleType = listing.SaleType;
+        SaleState = listing.SaleState;
+        WasSold = listing.WasSold;
+        Owner = listing.Owner;
+        CollectionId = listing.CollectionId;
+        CollectionName = listing.CollectionName;
+        OpenOffers = listing.Offers.Count(a => !a.Claimed);
+        TopOfferAmount = listing.TopOffer?.Amount;
+        TopOfferToken = listing.TopOffer?.PaymentToken;
         var token = nft?.TokenDetails.Find(a => a.TokenId == listing.TokenId);
         NftCacheHighRes = token?.CacheHighRes;
         NftCacheLowRes = token?.CacheLowRes;
