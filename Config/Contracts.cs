@@ -27,12 +27,11 @@ public static class Contracts {
 
     public static readonly ContractDetailsArray Nft1155Factories =
         new(
-            new[] { "" },
-            new[] { "0x7073c48298275822D36320CF2D462ce20BcdA254", "0xB731c56F240C1A1DfE57C0667fB7482931A6c8d8" },
-            new[] { "" },
-            new[] { "" },
-            new[] { "" },
-            new[] { "" }
-            
+            new[] { "0xe723F8FaD2F9Ed6F7ec769a58474d140C0aD2d08" },
+            new[] { "0xA7aD05cF47BC6dBde8664533c07397e84Eb03550" },
+            new[] { "0x630D0127cABcc578163A6c5a3D23cF46D72421C8" },
+            new[] { "0x0F567802D13E041704309E8b8940a4201136C20b" },
+            new[] { "0xA6F5Fb773966ba25c1772412100C9B7fE6a9fABC" },
+            new[] { "0x5Aa46df5cE00c37E9AEb4D1a8a9C476427176BC9" }
         );
 }

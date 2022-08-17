@@ -87,8 +87,8 @@ public class LookupService {
             _totalGeneralErrors++;
             return null;
         }
-        catch (System.Text.Json.JsonException) {
-            _logger.LogWarning("JSON deserialization failed for {Uri}", uri);
+        catch (System.Text.Json.JsonException error) {
+            _logger.LogWarning(error, "JSON deserialization failed for {Uri}", uri);
             return null;
         }
         catch (TaskCanceledException error) {
