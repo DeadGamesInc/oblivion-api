@@ -1004,7 +1004,12 @@ public class DatabaseService {
         var details = _details.Find(a => a.ChainID == chainID);
         if (details == null) return;
 
+        var factoryNfts = new List<string>();
+        foreach (var factory in details.FactoryNftLists) 
+            factoryNfts.AddRange(factory.Nfts.Select(nft => nft.Address));
+
         var nfts = details.NFTs.Select(nft => nft.Address).ToList();
+        nfts.AddRange(factoryNfts);
         await _lookup.UpdateNftApi(chainID, nfts);
         details.NFTAPIUpdated = true;
     }
