@@ -227,4 +227,26 @@ public class LookupService {
             _totalExceptions++;
         }
     }
+    
+    public async Task UpdateNftApi1155(ChainID chainID, List<string> nfts) {
+        try {
+            _logger.LogDebug("Updating NFT API 1155");
+            var uri = Globals.Blockchains.Find(a => a.ChainID == chainID)?.NftApiUri1155;
+            if (nfts == null || !nfts.Any() || string.IsNullOrEmpty(uri)) return;
+            
+            var client = _httpFactory.CreateClient();
+            var content = new StringContent(JsonConvert.SerializeObject(nfts), Encoding.UTF8, "application/json");
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            var result = await client.PostAsync(uri, content);
+            if (!result.IsSuccessStatusCode) {
+                _logger.LogWarning("NFT API update failed: {Code} : {Reason}", result.StatusCode, result.ReasonPhrase);
+                _generalErrors++;
+                _totalGeneralErrors++;
+            }
+        } catch (Exception error) {
+            _logger.LogError(error, "An exception occured while updating NFT API");
+            _exceptions++;
+            _totalExceptions++;
+        }
+    }
 }

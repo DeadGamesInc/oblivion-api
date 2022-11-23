@@ -1005,12 +1005,29 @@ public class DatabaseService {
         if (details == null) return;
 
         var factoryNfts = new List<string>();
-        foreach (var factory in details.FactoryNftLists) 
-            factoryNfts.AddRange(factory.Nfts.Select(nft => nft.Address));
-
+        var factories = Contracts.NftFactories.GetAddresses(chainID);
+        
+        foreach (var contract in factories) {
+            var factory = details.FactoryNftLists.FirstOrDefault(a => a.Contract == contract);
+            if (factory != null) factoryNfts.AddRange(factory.Nfts.Select(nft => nft.Address));
+        }
+        
         var nfts = details.NFTs.Select(nft => nft.Address).ToList();
         nfts.AddRange(factoryNfts);
         await _lookup.UpdateNftApi(chainID, nfts);
+        
+        var factoryNfts1155 = new List<string>();
+        var factories1155 = Contracts.Nft1155Factories.GetAddresses(chainID);
+        
+        foreach (var contract in factories1155) {
+            var factory = details.FactoryNftLists.FirstOrDefault(a => a.Contract == contract);
+            if (factory != null) factoryNfts1155.AddRange(factory.Nfts.Select(nft => nft.Address));
+        }
+
+        var nft1155 = details.NFT1155s.Select(nft => nft.Address).ToList();
+        nft1155.AddRange(factoryNfts1155);
+        await _lookup.UpdateNftApi1155(chainID, nft1155);
+        
         details.NFTAPIUpdated = true;
     }
 

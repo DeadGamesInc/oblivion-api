@@ -29,12 +29,12 @@ public static class Globals {
     public static readonly string DB_FILE = Path.Combine(WEB_ROOT, "database.json");
         
     public static readonly List<BlockchainDetails> Blockchains = new() {
-        new() { ChainID = ChainID.BSC_Mainnet, Node = "https://bsc-dataseed.binance.org", NftApiUri = "https://nft-api.deadgames.io/bsc/trackNfts" },
-        new() { ChainID = ChainID.BSC_Testnet, Node = "https://data-seed-prebsc-1-s1.binance.org:8545", NftApiUri = "https://nft-api.deadgames.io/bsc_testnet/trackNfts" },
-        new() { ChainID = ChainID.Nervos_Testnet, Node = "https://godwoken-testnet-v1.ckbapp.dev", NftApiUri = "https://nft-api.deadgames.io/nervos_testnet/trackNfts" },
-        new() { ChainID = ChainID.Nervos_Mainnet, Node = "https://v1.mainnet.godwoken.io/rpc", NftApiUri = "https://nft-api.deadgames.io/nervos/trackNfts" },
-        new() { ChainID = ChainID.Matic_Testnet, Node = "https://rpc-mumbai.maticvigil.com/v1/f9b890936205db15f52a4f48f228c46abf346fa8", NftApiUri = "https://nft-api.deadgames.io/matic_testnet/trackNfts" },
-        new() { ChainID = ChainID.Matic_Mainnet, Node = "https://polygon-rpc.com", NftApiUri = "https://nft-api.deadgames.io/matic/trackNfts" }
+        new() { ChainID = ChainID.BSC_Mainnet, Node = "https://bsc-dataseed.binance.org", NftApiUri = "https://nft-api.deadgames.io/bsc/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/bsc/trackNfts1155" },
+        new() { ChainID = ChainID.BSC_Testnet, Node = "https://data-seed-prebsc-1-s1.binance.org:8545", NftApiUri = "https://nft-api.deadgames.io/bsc_testnet/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/bsc_testnet/trackNfts1155" },
+        new() { ChainID = ChainID.Nervos_Testnet, Node = "https://godwoken-testnet-v1.ckbapp.dev", NftApiUri = "https://nft-api.deadgames.io/nervos_testnet/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/nervos/trackNfts1155" },
+        new() { ChainID = ChainID.Nervos_Mainnet, Node = "https://v1.mainnet.godwoken.io/rpc", NftApiUri = "https://nft-api.deadgames.io/nervos/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/nervos/trackNfts1155" },
+        new() { ChainID = ChainID.Matic_Testnet, Node = "https://rpc-mumbai.maticvigil.com/v1/f9b890936205db15f52a4f48f228c46abf346fa8", NftApiUri = "https://nft-api.deadgames.io/matic_testnet/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/matic_testnet/trackNfts1155" },
+        new() { ChainID = ChainID.Matic_Mainnet, Node = "https://polygon-rpc.com", NftApiUri = "https://nft-api.deadgames.io/matic/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/matic/trackNfts1155" }
     };
 
     public static readonly List<PaymentDetails> Payments = new() {

@@ -11,4 +11,5 @@ public class BlockchainDetails {
     public ChainID ChainID;
     public string Node;
     public string NftApiUri;
+    public string NftApiUri1155;
 }
