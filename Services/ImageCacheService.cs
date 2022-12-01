@@ -18,7 +18,7 @@ namespace OblivionAPI.Services;
 public class ImageCacheService {
     private readonly ILogger<ImageCacheService> _logger;
     private readonly IHttpClientFactory _httpFactory;
-
+    
     private int _exceptions;
     private int _previousExceptions;
     private int _totalExceptions;

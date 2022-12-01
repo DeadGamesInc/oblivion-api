@@ -344,7 +344,7 @@ public abstract class OblivionController : ControllerBase {
         if (offers == null) return NotFound(null);
         var list = offers.Where(a => !a.Claimed);
         return Ok(list.ToArray());
-    }
+    }ƒ
 
     [HttpGet]
     [Route("getOffer/{version:int}/{id}/{paymentToken}/{offerID}")]

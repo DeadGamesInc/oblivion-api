@@ -13,7 +13,7 @@ public static class Contracts {
     public static readonly ContractDetails OblivionCollectionManager = new("0x1A75487053676EDb05f9B9A8B73FE6f1580CfFd1", "0x47118A711D8aaAff53101DDD84F822E3f1D987B6", "0xD710425091cA0163CF73d8d51da0539b99DA981c", "0x56B8Af98281d4b00Ac3d7b2722459495677F16f3", "0xeBc5103EE33DC1Ea20B15fc81bD36158bEdc2B84", "0xFc71A4aA5484A46CbF502E0970f8b2719f6C7B91");
     public static readonly ContractDetails OblivionMintingService = new("0xB1890952A926E5256Db3D5182a76cC1cF42ac5a6", "0x403EA5b2A7019f02664Db21C3de050a0bC85D62A", "0x393995149BAB398E24B0e1BEB90cc24245de883B", "0xb060cA64f22cE53055960B73Af87fDF030DCd0ef", "0x32033306e092E404Ee9B206fBE044EA873219951", "0x3dCE8E07dD689E6C31686693A6817D323EAe8965");
     public static readonly ContractDetails OblivionMarket1155 = new("", "0x6709d83d06C5a593d064f0faeE1cE5Dbb831DA70", "", "", "", "");
-    public static readonly ContractDetails OblivionMintingService1155 = new("", "0xd8157c7905146e32Ac419a790069dbB919C09113", "", "", "", "");
+    public static readonly ContractDetails OblivionMintingService1155 = new("0x53B7cDfbf3Aa964EfB170FcDe5d3165AA92FA5cc", "0xF2cD76cd0b0bBa5285915245306608Dfc92Ff932", "0xf3A3a31b90BE814A45170CbC9df0678219c03656", "0x387443f120e966f0455F15653dC3eDdF64579bAC", "0x17b75E897dd94dD0b5a1B1a65EaB67Db44379D0F", "0x10875F04A263dE9CAe5B63C1dDb66392374E8a02");
 
     public static readonly ContractDetailsArray NftFactories = 
         new(
