@@ -30,7 +30,7 @@ public static class Globals {
         
     public static readonly List<BlockchainDetails> Blockchains = new() {
         new() { ChainID = ChainID.BSC_Mainnet, Node = "https://bsc-dataseed.binance.org", NftApiUri = "https://nft-api.deadgames.io/bsc/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/bsc/trackNfts1155" },
-        new() { ChainID = ChainID.BSC_Testnet, Node = "https://data-seed-prebsc-1-s1.binance.org:8545", NftApiUri = "https://nft-api.deadgames.io/bsc_testnet/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/bsc_testnet/trackNfts1155" },
+        new() { ChainID = ChainID.BSC_Testnet, Node = "https://fittest-patient-waterfall.bsc-testnet.discover.quiknode.pro/4e72f131bcdd323ab59edf324e14e38994db006b/", NftApiUri = "https://nft-api.deadgames.io/bsc_testnet/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/bsc_testnet/trackNfts1155" },
         new() { ChainID = ChainID.Nervos_Testnet, Node = "https://godwoken-testnet-v1.ckbapp.dev", NftApiUri = "https://nft-api.deadgames.io/nervos_testnet/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/nervos/trackNfts1155" },
         new() { ChainID = ChainID.Nervos_Mainnet, Node = "https://v1.mainnet.godwoken.io/rpc", NftApiUri = "https://nft-api.deadgames.io/nervos/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/nervos/trackNfts1155" },
         new() { ChainID = ChainID.Matic_Testnet, Node = "https://rpc-mumbai.maticvigil.com/v1/f9b890936205db15f52a4f48f228c46abf346fa8", NftApiUri = "https://nft-api.deadgames.io/matic_testnet/trackNfts", NftApiUri1155 = "https://nft-api.deadgames.io/matic_testnet/trackNfts1155" },
