@@ -1319,7 +1319,7 @@ public class DatabaseService {
             release = await _blockchain.GetRelease1155(chainID, id);
             if (release == null) return null;
 
-            var checkExists = _details.Find(a => a.ChainID == chainID)?.Releases.Find(a => a.ID == id);
+            var checkExists = _details.Find(a => a.ChainID == chainID)?.Releases1155.Find(a => a.ID == id);
             if (checkExists == null) details.Releases1155.Add(release);
             fresh = true;
         }
