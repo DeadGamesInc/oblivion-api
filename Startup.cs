@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Pinata.Client;
 
 namespace OblivionAPI; 
 
@@ -22,6 +23,15 @@ public class Startup {
                     .AllowAnyMethod()
                     .AllowAnyHeader();
             }));
+        
+        services.AddSingleton<IPinataClient, PinataClient>(a => {
+            var config = new Pinata.Client.Config {
+                ApiKey = Environment.GetEnvironmentVariable("PINATA_API_KEY"),
+                ApiSecret = Environment.GetEnvironmentVariable("PINATA_API_SECRET")
+            };
+            return new PinataClient(config);
+        });
+        
         services.AddSingleton<ImageCacheService>();
         services.AddSingleton<LookupService>();
         services.AddSingleton<BlockchainService>();
